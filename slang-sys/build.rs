@@ -98,19 +98,23 @@ impl bindgen::callbacks::ParseCallbacks for ParseCallback {
 }
 
 /// Converts `snake_case` or `SNAKE_CASE` to `PascalCase`.
+/// If the input is already in `PascalCase` it will be returned as is.
 fn pascal_case_from_snake_case(snake_case: &str) -> String {
 	let mut result = String::new();
-	let mut capitalize_next = true;
 
-	for c in snake_case.chars() {
-		if c == '_' {
-			capitalize_next = true;
-		} else {
-			if capitalize_next {
+	let should_lower = snake_case
+		.chars()
+		.filter(|c| c.is_alphabetic())
+		.all(|c| c.is_uppercase());
+
+	for part in snake_case.split('_') {
+		for (i, c) in part.chars().enumerate() {
+			if i == 0 {
 				result.push(c.to_ascii_uppercase());
-				capitalize_next = false;
-			} else {
+			} else if should_lower {
 				result.push(c.to_ascii_lowercase());
+			} else {
+				result.push(c);
 			}
 		}
 	}

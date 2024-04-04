@@ -7,23 +7,37 @@ Currently mostly reflects the needs of our own [engine](https://github.com/Float
 ## Example
 
 ```rust
-let session = slang::GlobalSession::new();
+let global_session = slang::GlobalSession::new().unwrap();
 
-let mut compile_request = session.create_compile_request();
+let search_path = std::ffi::CString::new("shaders/directory").unwrap();
 
-compile_request
-	.set_codegen_target(slang::CompileTarget::Dxil)
-	.set_target_profile(session.find_profile("sm_6_5"));
+// All compiler options are available through this builder.
+let session_options = slang::OptionsBuilder::new()
+	.optimization(slang::OptimizationLevel::High)
+	.matrix_layout_row(true);
 
-let entry_point = compile_request
-	.add_translation_unit(slang::SourceLanguage::Slang, None)
-	.add_source_file(filepath)
-	.add_entry_point("main", slang::Stage::Compute);
+let target_desc = slang::TargetDescBuilder::new()
+	.format(slang::CompileTarget::Dxil)
+	.profile(self.global_session.find_profile("sm_6_5"));
 
-let shader_bytecode = compile_request
-	.compile()
-	.expect("Shader compilation failed.")
-	.get_entry_point_code(entry_point);
+let session_desc = slang::SessionDescBuilder::new()
+	.targets(&[*target_desc])
+	.search_paths(&[include_path.as_ptr()])
+	.options(&session_options);
+
+let session = self.global_session.create_session(&session_desc).unwrap();
+
+let module = session.load_module("filename.slang").unwrap();
+
+let entry_point = module.find_entry_point_by_name("main").unwrap();
+
+let program = session.create_composite_component_type(&[
+	module.downcast(), entry_point.downcast(),
+]);
+
+let linked_program = program.link();
+
+let shader_bytecode = linked_program.get_entry_point_code(0, 0);
 ```
 
 ## Installation
