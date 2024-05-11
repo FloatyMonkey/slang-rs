@@ -117,13 +117,7 @@ impl GlobalSession {
 	pub fn create_session(&self, desc: &SessionDesc) -> Option<Session> {
 		let mut session = null_mut();
 		let res = vcall!(self, createSession(desc, &mut session));
-		let session = Session(IUnknown(std::ptr::NonNull::new(session as *mut _)?));
-
-		// TODO: Without adding an extra reference, the code crashes when Session is dropped.
-		// Investigate why this is happening, the current solution could cause a memory leak.
-		unsafe { (session.as_unknown().vtable().ISlangUnknown_addRef)(session.as_raw()) };
-
-		Some(session)
+		Some(Session(IUnknown(std::ptr::NonNull::new(session as *mut _)?)))
 	}
 
 	pub fn find_profile(&self, name: &str) -> ProfileID {
@@ -157,7 +151,9 @@ impl Session {
 			let blob = Blob(IUnknown(std::ptr::NonNull::new(diagnostics as *mut _).unwrap()));
 			Err(std::str::from_utf8(blob.as_slice()).unwrap().to_string())
 		} else {
-			Ok(Module(IUnknown(std::ptr::NonNull::new(module as *mut _).unwrap())))
+			let module = Module(IUnknown(std::ptr::NonNull::new(module as *mut _).unwrap()));
+			unsafe { (module.as_unknown().vtable().ISlangUnknown_addRef)(module.as_raw()) };
+			Ok(module)
 		}
 	}
 
