@@ -4,10 +4,10 @@ use std::env;
 use std::path::{Path, PathBuf};
 
 fn main() {
-	let slang_dir = env::var("SLANG_DIR")
-		.map(PathBuf::from)
-		.expect("Environment variable `SLANG_DIR` should be set to the directory of a Slang installation. \
-		This directory should contain `slang.h` and a `bin` subdirectory.");
+	let slang_dir = env::var("SLANG_DIR").map(PathBuf::from).expect(
+		"Environment variable `SLANG_DIR` should be set to the directory of a Slang installation. \
+		This directory should contain `slang.h` and a `bin` subdirectory.",
+	);
 
 	let out_dir = env::var("OUT_DIR")
 		.map(PathBuf::from)
@@ -24,14 +24,10 @@ fn main() {
 		.allowlist_type("slang.*")
 		.allowlist_var("SLANG_.*")
 		.with_codegen_config(
-			  bindgen::CodegenConfig::FUNCTIONS
-			| bindgen::CodegenConfig::TYPES
-			| bindgen::CodegenConfig::VARS,
+			bindgen::CodegenConfig::FUNCTIONS | bindgen::CodegenConfig::TYPES | bindgen::CodegenConfig::VARS,
 		)
 		.parse_callbacks(Box::new(ParseCallback {}))
-		.default_enum_style(bindgen::EnumVariation::Rust {
-			non_exhaustive: true,
-		})
+		.default_enum_style(bindgen::EnumVariation::Rust { non_exhaustive: true })
 		.vtable_generation(true)
 		.layout_tests(false)
 		.derive_copy(true)
@@ -42,30 +38,30 @@ fn main() {
 }
 
 fn link_libraries(slang_dir: &Path) {
-	let target_os = env::var("CARGO_CFG_TARGET_OS")
-		.expect("Couldn't determine target OS.");
+	let target_os = env::var("CARGO_CFG_TARGET_OS").expect("Couldn't determine target OS.");
 
-	let target_arch = env::var("CARGO_CFG_TARGET_ARCH")
-		.expect("Couldn't determine target architecture.");
+	let target_arch = env::var("CARGO_CFG_TARGET_ARCH").expect("Couldn't determine target architecture.");
 
-	let target = match(&*target_os, &*target_arch) {
-		("windows", "x86")     => "windows-x86",
-		("windows", "x86_64")  => "windows-x64",
+	let target = match (&*target_os, &*target_arch) {
+		("windows", "x86") => "windows-x86",
+		("windows", "x86_64") => "windows-x64",
 		("windows", "aarch64") => "windows-aarch64",
-		("linux",   "x86_64")  => "linux-x64",
-		("linux",   "aarch64") => "linux-aarch64",
-		("macos",   "x86_64")  => "macosx-x64",
+		("linux", "x86_64") => "linux-x64",
+		("linux", "aarch64") => "linux-aarch64",
+		("macos", "x86_64") => "macosx-x64",
 
-		(os, arch) => panic!("Unsupported OS or architecture: {os} {arch}")
+		(os, arch) => panic!("Unsupported OS or architecture: {os} {arch}"),
 	};
 
 	let bin_dir = slang_dir.join(format!("bin/{target}/release"));
 
 	if !bin_dir.is_dir() {
-		panic!("
+		panic!(
+			"
 			Could not find the target-specific `bin` subdirectory (bin/{target}/release) in the Slang installation directory. \
 			The Slang installation may not match the target this crate is being compiled for.
-		")
+		"
+		)
 	}
 
 	println!("cargo:rustc-link-search=native={}", bin_dir.display());

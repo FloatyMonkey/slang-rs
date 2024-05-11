@@ -4,19 +4,12 @@ use std::ptr::{null, null_mut};
 use slang_sys as sys;
 
 pub use sys::{
-	slang_CompilerOptionName as CompilerOptionName,
-	slang_SessionDesc as SessionDesc,
-	slang_TargetDesc as TargetDesc,
-	SlangCapabilityID as CapabilityID,
-	SlangCompileTarget as CompileTarget,
-	SlangDebugInfoLevel as DebugInfoLevel,
-	SlangFloatingPointMode as FloatingPointMode,
-	SlangLineDirectiveMode as LineDirectiveMode,
-	SlangMatrixLayoutMode as MatrixLayoutMode,
-	SlangOptimizationLevel as OptimizationLevel,
-	SlangProfileID as ProfileID,
-	SlangSourceLanguage as SourceLanguage,
-	SlangStage as Stage,
+	slang_CompilerOptionName as CompilerOptionName, slang_SessionDesc as SessionDesc,
+	slang_TargetDesc as TargetDesc, SlangCapabilityID as CapabilityID,
+	SlangCompileTarget as CompileTarget, SlangDebugInfoLevel as DebugInfoLevel,
+	SlangFloatingPointMode as FloatingPointMode, SlangLineDirectiveMode as LineDirectiveMode,
+	SlangMatrixLayoutMode as MatrixLayoutMode, SlangOptimizationLevel as OptimizationLevel,
+	SlangProfileID as ProfileID, SlangSourceLanguage as SourceLanguage, SlangStage as Stage,
 	SlangUUID as UUID,
 };
 
@@ -27,7 +20,12 @@ macro_rules! vcall {
 }
 
 const fn uuid(data1: u32, data2: u16, data3: u16, data4: [u8; 8]) -> UUID {
-	UUID { data1, data2, data3, data4 }
+	UUID {
+		data1,
+		data2,
+		data3,
+		data4,
+	}
 }
 
 unsafe trait Interface: Sized {
@@ -59,7 +57,12 @@ pub struct IUnknown(std::ptr::NonNull<std::ffi::c_void>);
 
 unsafe impl Interface for IUnknown {
 	type Vtable = sys::ISlangUnknown__bindgen_vtable;
-	const IID: UUID = uuid(0x00000000, 0x0000, 0x0000, [0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46]);
+	const IID: UUID = uuid(
+		0x00000000,
+		0x0000,
+		0x0000,
+		[0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46],
+	);
 }
 
 impl Clone for IUnknown {
@@ -81,7 +84,12 @@ pub struct Blob(IUnknown);
 
 unsafe impl Interface for Blob {
 	type Vtable = sys::IBlobVtable;
-	const IID: UUID = uuid(0x8ba5fb08, 0x5195, 0x40e2, [0xac, 0x58, 0x0d, 0x98, 0x9c, 0x3a, 0x01, 0x02]);
+	const IID: UUID = uuid(
+		0x8ba5fb08,
+		0x5195,
+		0x40e2,
+		[0xac, 0x58, 0x0d, 0x98, 0x9c, 0x3a, 0x01, 0x02],
+	);
 }
 
 impl Blob {
@@ -98,26 +106,42 @@ pub struct GlobalSession(IUnknown);
 
 unsafe impl Interface for GlobalSession {
 	type Vtable = sys::IGlobalSessionVtable;
-	const IID: UUID = uuid(0xc140b5fd, 0x0c78, 0x452e, [0xba, 0x7c, 0x1a, 0x1e, 0x70, 0xc7, 0xf7, 0x1c]);
+	const IID: UUID = uuid(
+		0xc140b5fd,
+		0x0c78,
+		0x452e,
+		[0xba, 0x7c, 0x1a, 0x1e, 0x70, 0xc7, 0xf7, 0x1c],
+	);
 }
 
 impl GlobalSession {
 	pub fn new() -> Option<GlobalSession> {
 		let mut global_session = null_mut();
 		unsafe { sys::slang_createGlobalSession(sys::SLANG_API_VERSION as _, &mut global_session) };
-		Some(GlobalSession(IUnknown(std::ptr::NonNull::new(global_session as *mut _)?)))
+		Some(GlobalSession(IUnknown(std::ptr::NonNull::new(
+			global_session as *mut _,
+		)?)))
 	}
 
 	pub fn new_without_std_lib() -> Option<GlobalSession> {
 		let mut global_session = null_mut();
-		unsafe { sys::slang_createGlobalSessionWithoutStdLib(sys::SLANG_API_VERSION as _, &mut global_session) };
-		Some(GlobalSession(IUnknown(std::ptr::NonNull::new(global_session as *mut _)?)))
+		unsafe {
+			sys::slang_createGlobalSessionWithoutStdLib(
+				sys::SLANG_API_VERSION as _,
+				&mut global_session,
+			)
+		};
+		Some(GlobalSession(IUnknown(std::ptr::NonNull::new(
+			global_session as *mut _,
+		)?)))
 	}
 
 	pub fn create_session(&self, desc: &SessionDesc) -> Option<Session> {
 		let mut session = null_mut();
 		let res = vcall!(self, createSession(desc, &mut session));
-		Some(Session(IUnknown(std::ptr::NonNull::new(session as *mut _)?)))
+		Some(Session(IUnknown(std::ptr::NonNull::new(
+			session as *mut _,
+		)?)))
 	}
 
 	pub fn find_profile(&self, name: &str) -> ProfileID {
@@ -137,7 +161,12 @@ pub struct Session(IUnknown);
 
 unsafe impl Interface for Session {
 	type Vtable = sys::ISessionVtable;
-	const IID: UUID = uuid(0x67618701, 0xd116, 0x468f, [0xab, 0x3b, 0x47, 0x4b, 0xed, 0xce, 0x0e, 0x3d]);
+	const IID: UUID = uuid(
+		0x67618701,
+		0xd116,
+		0x468f,
+		[0xab, 0x3b, 0x47, 0x4b, 0xed, 0xce, 0x0e, 0x3d],
+	);
 }
 
 impl Session {
@@ -148,7 +177,9 @@ impl Session {
 		let module = vcall!(self, loadModule(name.as_ptr(), &mut diagnostics));
 
 		if module.is_null() {
-			let blob = Blob(IUnknown(std::ptr::NonNull::new(diagnostics as *mut _).unwrap()));
+			let blob = Blob(IUnknown(
+				std::ptr::NonNull::new(diagnostics as *mut _).unwrap(),
+			));
 			Err(std::str::from_utf8(blob.as_slice()).unwrap().to_string())
 		} else {
 			let module = Module(IUnknown(std::ptr::NonNull::new(module as *mut _).unwrap()));
@@ -158,12 +189,23 @@ impl Session {
 	}
 
 	pub fn create_composite_component_type(&self, components: &[&ComponentType]) -> ComponentType {
-		let components: Vec<*mut std::ffi::c_void> = unsafe { components.iter().map(|c| c.as_raw()).collect() };
+		let components: Vec<*mut std::ffi::c_void> =
+			unsafe { components.iter().map(|c| c.as_raw()).collect() };
 
 		let mut composite_component_type = null_mut();
 		let mut diagnostics = null_mut();
-		let res = vcall!(self, createCompositeComponentType(components.as_ptr() as _, components.len() as _, &mut composite_component_type, &mut diagnostics));
-		ComponentType(IUnknown(std::ptr::NonNull::new(composite_component_type as *mut _).unwrap()))
+		let res = vcall!(
+			self,
+			createCompositeComponentType(
+				components.as_ptr() as _,
+				components.len() as _,
+				&mut composite_component_type,
+				&mut diagnostics
+			)
+		);
+		ComponentType(IUnknown(
+			std::ptr::NonNull::new(composite_component_type as *mut _).unwrap(),
+		))
 	}
 }
 
@@ -173,7 +215,12 @@ pub struct ComponentType(IUnknown);
 
 unsafe impl Interface for ComponentType {
 	type Vtable = sys::IComponentTypeVtable;
-	const IID: UUID = uuid(0x5bc42be8, 0x5c50, 0x4929, [0x9e, 0x5e, 0xd1, 0x5e, 0x7c, 0x24, 0x01, 0x5f]);
+	const IID: UUID = uuid(
+		0x5bc42be8,
+		0x5c50,
+		0x4929,
+		[0x9e, 0x5e, 0xd1, 0x5e, 0x7c, 0x24, 0x01, 0x5f],
+	);
 }
 
 impl ComponentType {
@@ -183,21 +230,30 @@ impl ComponentType {
 		let res = vcall!(self, link(&mut linked_component_type, &mut diagnostics));
 
 		if linked_component_type.is_null() {
-			let blob = Blob(IUnknown(std::ptr::NonNull::new(diagnostics as *mut _).unwrap()));
+			let blob = Blob(IUnknown(
+				std::ptr::NonNull::new(diagnostics as *mut _).unwrap(),
+			));
 			let error = std::str::from_utf8(blob.as_slice()).unwrap().to_string();
 			println!("Error: {}", error);
 		}
 
-		ComponentType(IUnknown(std::ptr::NonNull::new(linked_component_type as *mut _).unwrap()))
+		ComponentType(IUnknown(
+			std::ptr::NonNull::new(linked_component_type as *mut _).unwrap(),
+		))
 	}
 
 	pub fn get_entry_point_code(&self, index: i64, target: i64) -> Vec<u8> {
 		let mut code = null_mut();
 		let mut diagnostics = null_mut();
-		let res = vcall!(self, getEntryPointCode(index, target, &mut code, &mut diagnostics));
+		let res = vcall!(
+			self,
+			getEntryPointCode(index, target, &mut code, &mut diagnostics)
+		);
 
 		if code.is_null() {
-			let blob = Blob(IUnknown(std::ptr::NonNull::new(diagnostics as *mut _).unwrap()));
+			let blob = Blob(IUnknown(
+				std::ptr::NonNull::new(diagnostics as *mut _).unwrap(),
+			));
 			let error = std::str::from_utf8(blob.as_slice()).unwrap().to_string();
 			println!("Error: {}", error);
 		}
@@ -213,7 +269,12 @@ pub struct EntryPoint(IUnknown);
 
 unsafe impl Interface for EntryPoint {
 	type Vtable = sys::IEntryPointVtable;
-	const IID: UUID = uuid(0x8f241361, 0xf5bd, 0x4ca0, [0xa3, 0xac, 0x02, 0xf7, 0xfa, 0x24, 0x02, 0xb8]);
+	const IID: UUID = uuid(
+		0x8f241361,
+		0xf5bd,
+		0x4ca0,
+		[0xa3, 0xac, 0x02, 0xf7, 0xfa, 0x24, 0x02, 0xb8],
+	);
 }
 
 unsafe impl Downcast<ComponentType> for EntryPoint {
@@ -228,7 +289,12 @@ pub struct TypeConformance(IUnknown);
 
 unsafe impl Interface for TypeConformance {
 	type Vtable = sys::ITypeConformanceVtable;
-	const IID: UUID = uuid(0x73eb3147, 0xe544, 0x41b5, [0xb8, 0xf0, 0xa2, 0x44, 0xdf, 0x21, 0x94, 0x0b]);
+	const IID: UUID = uuid(
+		0x73eb3147,
+		0xe544,
+		0x41b5,
+		[0xb8, 0xf0, 0xa2, 0x44, 0xdf, 0x21, 0x94, 0x0b],
+	);
 }
 
 unsafe impl Downcast<ComponentType> for TypeConformance {
@@ -243,7 +309,12 @@ pub struct Module(IUnknown);
 
 unsafe impl Interface for Module {
 	type Vtable = sys::IModuleVtable;
-	const IID: UUID = uuid(0x0c720e64, 0x8722, 0x4d31, [0x89, 0x90, 0x63, 0x8a, 0x98, 0xb1, 0xc2, 0x79]);
+	const IID: UUID = uuid(
+		0x0c720e64,
+		0x8722,
+		0x4d31,
+		[0x89, 0x90, 0x63, 0x8a, 0x98, 0xb1, 0xc2, 0x79],
+	);
 }
 
 unsafe impl Downcast<ComponentType> for Module {
@@ -257,7 +328,9 @@ impl Module {
 		let name = CString::new(name).unwrap();
 		let mut entry_point = null_mut();
 		vcall!(self, findEntryPointByName(name.as_ptr(), &mut entry_point));
-		Some(EntryPoint(IUnknown(std::ptr::NonNull::new(entry_point as *mut _)?)))
+		Some(EntryPoint(IUnknown(std::ptr::NonNull::new(
+			entry_point as *mut _,
+		)?)))
 	}
 
 	pub fn name(&self) -> &str {
@@ -286,7 +359,7 @@ impl TargetDescBuilder {
 			inner: TargetDesc {
 				structureSize: std::mem::size_of::<TargetDesc>(),
 				..unsafe { std::mem::zeroed() }
-			}
+			},
 		}
 	}
 
@@ -325,7 +398,7 @@ impl SessionDescBuilder {
 			inner: SessionDesc {
 				structureSize: std::mem::size_of::<SessionDesc>(),
 				..unsafe { std::mem::zeroed() }
-			}
+			},
 		}
 	}
 
