@@ -24,10 +24,16 @@ fn main() {
 		.allowlist_type("slang.*")
 		.allowlist_var("SLANG_.*")
 		.with_codegen_config(
-			bindgen::CodegenConfig::FUNCTIONS | bindgen::CodegenConfig::TYPES | bindgen::CodegenConfig::VARS,
+			bindgen::CodegenConfig::FUNCTIONS
+				| bindgen::CodegenConfig::TYPES
+				| bindgen::CodegenConfig::VARS,
 		)
 		.parse_callbacks(Box::new(ParseCallback {}))
-		.default_enum_style(bindgen::EnumVariation::Rust { non_exhaustive: true })
+		.default_enum_style(bindgen::EnumVariation::Rust {
+			non_exhaustive: false,
+		})
+		.constified_enum("SlangProfileID")
+		.constified_enum("SlangCapabilityID")
 		.vtable_generation(true)
 		.layout_tests(false)
 		.derive_copy(true)
@@ -40,7 +46,8 @@ fn main() {
 fn link_libraries(slang_dir: &Path) {
 	let target_os = env::var("CARGO_CFG_TARGET_OS").expect("Couldn't determine target OS.");
 
-	let target_arch = env::var("CARGO_CFG_TARGET_ARCH").expect("Couldn't determine target architecture.");
+	let target_arch =
+		env::var("CARGO_CFG_TARGET_ARCH").expect("Couldn't determine target architecture.");
 
 	let target = match (&*target_os, &*target_arch) {
 		("windows", "x86") => "windows-x86",

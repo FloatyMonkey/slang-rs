@@ -5,12 +5,11 @@ use slang_sys as sys;
 
 pub use sys::{
 	slang_CompilerOptionName as CompilerOptionName, slang_SessionDesc as SessionDesc,
-	slang_TargetDesc as TargetDesc, SlangCapabilityID as CapabilityID,
-	SlangCompileTarget as CompileTarget, SlangDebugInfoLevel as DebugInfoLevel,
-	SlangFloatingPointMode as FloatingPointMode, SlangLineDirectiveMode as LineDirectiveMode,
-	SlangMatrixLayoutMode as MatrixLayoutMode, SlangOptimizationLevel as OptimizationLevel,
-	SlangProfileID as ProfileID, SlangSourceLanguage as SourceLanguage, SlangStage as Stage,
-	SlangUUID as UUID,
+	slang_TargetDesc as TargetDesc, SlangCompileTarget as CompileTarget,
+	SlangDebugInfoLevel as DebugInfoLevel, SlangFloatingPointMode as FloatingPointMode,
+	SlangLineDirectiveMode as LineDirectiveMode, SlangMatrixLayoutMode as MatrixLayoutMode,
+	SlangOptimizationLevel as OptimizationLevel, SlangSourceLanguage as SourceLanguage,
+	SlangStage as Stage, SlangUUID as UUID,
 };
 
 macro_rules! vcall {
@@ -26,6 +25,18 @@ const fn uuid(data1: u32, data2: u16, data3: u16, data4: [u8; 8]) -> UUID {
 		data3,
 		data4,
 	}
+}
+
+pub struct ProfileID(sys::SlangProfileID);
+
+impl ProfileID {
+	pub const UNKNOWN: ProfileID = ProfileID(sys::SlangProfileID_SlangProfileUnknown);
+}
+
+pub struct CapabilityID(sys::SlangCapabilityID);
+
+impl CapabilityID {
+	pub const UNKNOWN: CapabilityID = CapabilityID(sys::SlangCapabilityID_SlangCapabilityUnknown);
 }
 
 unsafe trait Interface: Sized {
@@ -146,12 +157,12 @@ impl GlobalSession {
 
 	pub fn find_profile(&self, name: &str) -> ProfileID {
 		let name = CString::new(name).unwrap();
-		vcall!(self, findProfile(name.as_ptr()))
+		ProfileID(vcall!(self, findProfile(name.as_ptr())))
 	}
 
 	pub fn find_capability(&self, name: &str) -> CapabilityID {
 		let name = CString::new(name).unwrap();
-		vcall!(self, findCapability(name.as_ptr()))
+		CapabilityID(vcall!(self, findCapability(name.as_ptr())))
 	}
 }
 
@@ -369,7 +380,7 @@ impl TargetDescBuilder {
 	}
 
 	pub fn profile(mut self, profile: ProfileID) -> Self {
-		self.inner.profile = profile;
+		self.inner.profile = profile.0;
 		self
 	}
 
@@ -522,7 +533,12 @@ impl OptionsBuilder {
 	option!(Language, language(language: SourceLanguage));
 	option!(MatrixLayoutColumn, matrix_layout_column(enable: bool));
 	option!(MatrixLayoutRow, matrix_layout_row(enable: bool));
-	option!(Profile, profile(profile: ProfileID));
+
+	#[inline(always)]
+	pub fn profile(self, profile: ProfileID) -> Self {
+		self.push_ints(CompilerOptionName::Profile, profile.0 as _, 0)
+	}
+
 	option!(Stage, stage(stage: Stage));
 	option!(Target, target(target: CompileTarget));
 	option!(WarningsAsErrors, warnings_as_errors(warning_codes: &str));
@@ -534,7 +550,11 @@ impl OptionsBuilder {
 	option!(SkipSPIRVValidation, skip_spirv_validation(enable: bool));
 
 	// Target
-	option!(Capability, capability(capability: CapabilityID));
+	#[inline(always)]
+	pub fn capability(self, capability: CapabilityID) -> Self {
+		self.push_ints(CompilerOptionName::Capability, capability.0 as _, 0)
+	}
+
 	option!(DefaultImageFormatUnknown, default_image_format_unknown(enable: bool));
 	option!(DisableDynamicDispatch, disable_dynamic_dispatch(enable: bool));
 	option!(DisableSpecialization, disable_specialization(enable: bool));
