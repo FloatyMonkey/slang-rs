@@ -4,7 +4,7 @@ include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 use std::ffi::{c_char, c_int, c_void};
 
-// Based on Slang version 2024.1.6
+// Based on Slang version 2024.1.29
 
 #[repr(C)]
 pub struct IBlobVtable {
@@ -87,6 +87,7 @@ pub struct IComponentTypeVtable {
 	pub getEntryPointHostCallable: unsafe extern "stdcall" fn(*mut c_void, entryPointIndex: c_int, targetIndex: c_int, outSharedLibrary: *mut *mut ISlangSharedLibrary, outDiagnostics: *mut *mut ISlangBlob) -> SlangResult,
 	pub renameEntryPoint: unsafe extern "stdcall" fn(*mut c_void, newName: *const c_char, outEntryPoint: *mut *mut slang_IComponentType) -> SlangResult,
 	pub linkWithOptions: unsafe extern "stdcall" fn(*mut c_void, outLinkedComponentType: *mut *mut slang_IComponentType, compilerOptionEntryCount: u32, compilerOptionEntries: *mut slang_CompilerOptionEntry, outDiagnostics: *mut *mut ISlangBlob) -> SlangResult,
+	pub getTargetCode: unsafe extern "stdcall" fn(*mut c_void, targetIndex: SlangInt, outCode: *mut *mut ISlangBlob, outDiagnostics: *mut *mut ISlangBlob) -> SlangResult,
 }
 
 #[repr(C)]
@@ -111,4 +112,7 @@ pub struct IModuleVtable {
 	pub getName: unsafe extern "stdcall" fn(*mut c_void) -> *const c_char,
 	pub getFilePath: unsafe extern "stdcall" fn(*mut c_void) -> *const c_char,
 	pub getUniqueIdentity: unsafe extern "stdcall" fn(*mut c_void) -> *const c_char,
+	pub findAndCheckEntryPoint: unsafe extern "stdcall" fn(*mut c_void, name: *const c_char, stage: SlangStage, outEntryPoint: *mut *mut slang_IEntryPoint, outDiagnostics: *mut *mut ISlangBlob) -> SlangResult,
+	pub getDependencyFileCount: unsafe extern "stdcall" fn(*mut c_void) -> SlangInt32,
+	pub getDependencyFilePath: unsafe extern "stdcall" fn(*mut c_void, index: SlangInt32) -> *const c_char,
 }

@@ -5,8 +5,7 @@ use std::path::{Path, PathBuf};
 
 fn main() {
 	let slang_dir = env::var("SLANG_DIR").map(PathBuf::from).expect(
-		"Environment variable `SLANG_DIR` should be set to the directory of a Slang installation. \
-		This directory should contain `slang.h` and a `bin` subdirectory.",
+		"Environment variable `SLANG_DIR` should be set to the directory of a Slang installation.",
 	);
 
 	let out_dir = env::var("OUT_DIR")
@@ -16,7 +15,7 @@ fn main() {
 	link_libraries(&slang_dir);
 
 	bindgen::builder()
-		.header(slang_dir.join("slang.h").to_str().unwrap())
+		.header(slang_dir.join("include/slang.h").to_str().unwrap())
 		.clang_arg("-v")
 		.clang_arg("-xc++")
 		.clang_arg("-std=c++14")
@@ -44,34 +43,13 @@ fn main() {
 }
 
 fn link_libraries(slang_dir: &Path) {
-	let target_os = env::var("CARGO_CFG_TARGET_OS").expect("Couldn't determine target OS.");
+	let lib_dir = slang_dir.join("lib");
 
-	let target_arch =
-		env::var("CARGO_CFG_TARGET_ARCH").expect("Couldn't determine target architecture.");
-
-	let target = match (&*target_os, &*target_arch) {
-		("windows", "x86") => "windows-x86",
-		("windows", "x86_64") => "windows-x64",
-		("windows", "aarch64") => "windows-aarch64",
-		("linux", "x86_64") => "linux-x64",
-		("linux", "aarch64") => "linux-aarch64",
-		("macos", "x86_64") => "macosx-x64",
-
-		(os, arch) => panic!("Unsupported OS or architecture: {os} {arch}"),
-	};
-
-	let bin_dir = slang_dir.join(format!("bin/{target}/release"));
-
-	if !bin_dir.is_dir() {
-		panic!(
-			"
-			Could not find the target-specific `bin` subdirectory (bin/{target}/release) in the Slang installation directory. \
-			The Slang installation may not match the target this crate is being compiled for.
-		"
-		)
+	if !lib_dir.is_dir() {
+		panic!("Couldn't find the `lib` subdirectory in the Slang installation directory.")
 	}
 
-	println!("cargo:rustc-link-search=native={}", bin_dir.display());
+	println!("cargo:rustc-link-search=native={}", lib_dir.display());
 	println!("cargo:rustc-link-lib=dylib=slang");
 }
 
