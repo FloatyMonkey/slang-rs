@@ -27,6 +27,32 @@ const fn uuid(data1: u32, data2: u16, data3: u16, data4: [u8; 8]) -> UUID {
 	}
 }
 
+pub enum Error {
+	Code(sys::SlangResult),
+	Blob(Blob),
+}
+
+impl std::fmt::Debug for Error {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Error::Code(code) => write!(f, "{}", code),
+			Error::Blob(blob) => write!(f, "{}", blob.as_str().unwrap()),
+		}
+	}
+}
+
+pub type Result<T> = std::result::Result<T, Error>;
+
+fn result_from_blob(code: sys::SlangResult, blob: *mut sys::slang_IBlob) -> Result<()> {
+	if code < 0 {
+		Err(Error::Blob(Blob(IUnknown(
+			std::ptr::NonNull::new(blob as *mut _).unwrap(),
+		))))
+	} else {
+		Ok(())
+	}
+}
+
 pub struct ProfileID(sys::SlangProfileID);
 
 impl ProfileID {
@@ -109,6 +135,10 @@ impl Blob {
 		let size = vcall!(self, getBufferSize());
 		unsafe { std::slice::from_raw_parts(ptr as *const u8, size) }
 	}
+
+	pub fn as_str(&self) -> std::result::Result<&str, std::str::Utf8Error> {
+		std::str::from_utf8(self.as_slice())
+	}
 }
 
 #[repr(transparent)]
@@ -149,7 +179,7 @@ impl GlobalSession {
 
 	pub fn create_session(&self, desc: &SessionDesc) -> Option<Session> {
 		let mut session = null_mut();
-		let res = vcall!(self, createSession(desc, &mut session));
+		vcall!(self, createSession(desc, &mut session));
 		Some(Session(IUnknown(std::ptr::NonNull::new(
 			session as *mut _,
 		)?)))
@@ -181,7 +211,7 @@ unsafe impl Interface for Session {
 }
 
 impl Session {
-	pub fn load_module(&self, name: &str) -> Result<Module, String> {
+	pub fn load_module(&self, name: &str) -> Result<Module> {
 		let name = CString::new(name).unwrap();
 		let mut diagnostics = null_mut();
 
@@ -191,7 +221,7 @@ impl Session {
 			let blob = Blob(IUnknown(
 				std::ptr::NonNull::new(diagnostics as *mut _).unwrap(),
 			));
-			Err(std::str::from_utf8(blob.as_slice()).unwrap().to_string())
+			Err(Error::Blob(blob))
 		} else {
 			let module = Module(IUnknown(std::ptr::NonNull::new(module as *mut _).unwrap()));
 			unsafe { (module.as_unknown().vtable().ISlangUnknown_addRef)(module.as_raw()) };
@@ -199,24 +229,29 @@ impl Session {
 		}
 	}
 
-	pub fn create_composite_component_type(&self, components: &[&ComponentType]) -> ComponentType {
-		let components: Vec<*mut std::ffi::c_void> =
-			unsafe { components.iter().map(|c| c.as_raw()).collect() };
-
+	pub fn create_composite_component_type(
+		&self,
+		components: &[ComponentType],
+	) -> Result<ComponentType> {
 		let mut composite_component_type = null_mut();
 		let mut diagnostics = null_mut();
-		let res = vcall!(
-			self,
-			createCompositeComponentType(
-				components.as_ptr() as _,
-				components.len() as _,
-				&mut composite_component_type,
-				&mut diagnostics
-			)
-		);
-		ComponentType(IUnknown(
+
+		result_from_blob(
+			vcall!(
+				self,
+				createCompositeComponentType(
+					components.as_ptr() as _,
+					components.len() as _,
+					&mut composite_component_type,
+					&mut diagnostics
+				)
+			),
+			diagnostics,
+		)?;
+
+		Ok(ComponentType(IUnknown(
 			std::ptr::NonNull::new(composite_component_type as *mut _).unwrap(),
-		))
+		)))
 	}
 }
 
@@ -235,42 +270,35 @@ unsafe impl Interface for ComponentType {
 }
 
 impl ComponentType {
-	pub fn link(&self) -> ComponentType {
+	pub fn link(&self) -> Result<ComponentType> {
 		let mut linked_component_type = null_mut();
 		let mut diagnostics = null_mut();
-		let res = vcall!(self, link(&mut linked_component_type, &mut diagnostics));
 
-		if linked_component_type.is_null() {
-			let blob = Blob(IUnknown(
-				std::ptr::NonNull::new(diagnostics as *mut _).unwrap(),
-			));
-			let error = std::str::from_utf8(blob.as_slice()).unwrap().to_string();
-			println!("Error: {}", error);
-		}
+		result_from_blob(
+			vcall!(self, link(&mut linked_component_type, &mut diagnostics)),
+			diagnostics,
+		)?;
 
-		ComponentType(IUnknown(
+		Ok(ComponentType(IUnknown(
 			std::ptr::NonNull::new(linked_component_type as *mut _).unwrap(),
-		))
+		)))
 	}
 
-	pub fn get_entry_point_code(&self, index: i64, target: i64) -> Vec<u8> {
+	pub fn get_entry_point_code(&self, index: i64, target: i64) -> Result<Blob> {
 		let mut code = null_mut();
 		let mut diagnostics = null_mut();
-		let res = vcall!(
-			self,
-			getEntryPointCode(index, target, &mut code, &mut diagnostics)
-		);
 
-		if code.is_null() {
-			let blob = Blob(IUnknown(
-				std::ptr::NonNull::new(diagnostics as *mut _).unwrap(),
-			));
-			let error = std::str::from_utf8(blob.as_slice()).unwrap().to_string();
-			println!("Error: {}", error);
-		}
+		result_from_blob(
+			vcall!(
+				self,
+				getEntryPointCode(index, target, &mut code, &mut diagnostics)
+			),
+			diagnostics,
+		)?;
 
-		let blob = Blob(IUnknown(std::ptr::NonNull::new(code as *mut _).unwrap()));
-		Vec::from(blob.as_slice())
+		Ok(Blob(IUnknown(
+			std::ptr::NonNull::new(code as *mut _).unwrap(),
+		)))
 	}
 }
 

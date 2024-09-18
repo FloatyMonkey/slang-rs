@@ -32,12 +32,12 @@ let module = session.load_module("filename.slang").unwrap();
 let entry_point = module.find_entry_point_by_name("main").unwrap();
 
 let program = session.create_composite_component_type(&[
-	module.downcast(), entry_point.downcast(),
-]);
+	module.downcast().clone(), entry_point.downcast().clone(),
+]).unwrap();
 
-let linked_program = program.link();
+let linked_program = program.link().unwrap();
 
-let shader_bytecode = linked_program.get_entry_point_code(0, 0);
+let shader_bytecode = linked_program.get_entry_point_code(0, 0).unwrap();
 ```
 
 ## Installation
