@@ -1,3 +1,5 @@
+pub mod reflection;
+
 use std::ffi::{CStr, CString};
 use std::ptr::{null, null_mut};
 
@@ -270,6 +272,19 @@ unsafe impl Interface for ComponentType {
 }
 
 impl ComponentType {
+	pub fn layout(&self, target: i64) -> Result<&reflection::Shader> {
+		let mut diagnostics = null_mut();
+		let ptr = vcall!(self, getLayout(target, &mut diagnostics));
+
+		if ptr.is_null() {
+			Err(Error::Blob(Blob(IUnknown(
+				std::ptr::NonNull::new(diagnostics as *mut _).unwrap(),
+			))))
+		} else {
+			Ok(unsafe { &*(ptr as *const _) })
+		}
+	}
+
 	pub fn link(&self) -> Result<ComponentType> {
 		let mut linked_component_type = null_mut();
 		let mut diagnostics = null_mut();
@@ -284,7 +299,7 @@ impl ComponentType {
 		)))
 	}
 
-	pub fn get_entry_point_code(&self, index: i64, target: i64) -> Result<Blob> {
+	pub fn entry_point_code(&self, index: i64, target: i64) -> Result<Blob> {
 		let mut code = null_mut();
 		let mut diagnostics = null_mut();
 
@@ -299,6 +314,11 @@ impl ComponentType {
 		Ok(Blob(IUnknown(
 			std::ptr::NonNull::new(code as *mut _).unwrap(),
 		)))
+	}
+
+	#[deprecated = "Use `entry_point_code` instead"]
+	pub fn get_entry_point_code(&self, index: i64, target: i64) -> Result<Blob> {
+		self.entry_point_code(index, target)
 	}
 }
 
@@ -385,6 +405,11 @@ impl Module {
 	pub fn unique_identity(&self) -> &str {
 		let identity = vcall!(self, getUniqueIdentity());
 		unsafe { CStr::from_ptr(identity).to_str().unwrap() }
+	}
+
+	pub fn module_reflection(&self) -> &reflection::Decl {
+		let ptr = vcall!(self, getModuleReflection());
+		unsafe { &*(ptr as *const _) }
 	}
 }
 

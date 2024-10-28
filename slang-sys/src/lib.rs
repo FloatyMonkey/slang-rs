@@ -4,7 +4,7 @@ include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 use std::ffi::{c_char, c_int, c_void};
 
-// Based on Slang version 2024.1.29
+// Based on Slang version 2024.14.3
 
 #[repr(C)]
 pub struct IBlobVtable {
@@ -88,6 +88,8 @@ pub struct IComponentTypeVtable {
 	pub renameEntryPoint: unsafe extern "C" fn(*mut c_void, newName: *const c_char, outEntryPoint: *mut *mut slang_IComponentType) -> SlangResult,
 	pub linkWithOptions: unsafe extern "C" fn(*mut c_void, outLinkedComponentType: *mut *mut slang_IComponentType, compilerOptionEntryCount: u32, compilerOptionEntries: *mut slang_CompilerOptionEntry, outDiagnostics: *mut *mut ISlangBlob) -> SlangResult,
 	pub getTargetCode: unsafe extern "C" fn(*mut c_void, targetIndex: SlangInt, outCode: *mut *mut ISlangBlob, outDiagnostics: *mut *mut ISlangBlob) -> SlangResult,
+	pub getTargetMetadata: unsafe extern "C" fn(*mut c_void, targetIndex: SlangInt, outMetadata: *mut *mut slang_IMetadata, outDiagnostics: *mut *mut ISlangBlob) -> SlangResult,
+	pub getEntryPointMetadata: unsafe extern "C" fn(*mut c_void, entryPointIndex: SlangInt, targetIndex: SlangInt, outMetadata: *mut *mut slang_IMetadata, outDiagnostics: *mut *mut ISlangBlob) -> SlangResult,
 }
 
 #[repr(C)]
@@ -115,4 +117,5 @@ pub struct IModuleVtable {
 	pub findAndCheckEntryPoint: unsafe extern "C" fn(*mut c_void, name: *const c_char, stage: SlangStage, outEntryPoint: *mut *mut slang_IEntryPoint, outDiagnostics: *mut *mut ISlangBlob) -> SlangResult,
 	pub getDependencyFileCount: unsafe extern "C" fn(*mut c_void) -> SlangInt32,
 	pub getDependencyFilePath: unsafe extern "C" fn(*mut c_void, index: SlangInt32) -> *const c_char,
+	pub getModuleReflection: unsafe extern "C" fn(*mut c_void) -> *mut slang_DeclReflection,
 }

@@ -1,8 +1,8 @@
 # Slang Rust Bindings
 
-Rust bindings for the [Slang](https://github.com/shader-slang/slang/) shader language compiler. In contrast to existing bindings, these internally use Slang's COM/C++ API because the old C API is soon to be deprecated.
+Rust bindings for the [Slang](https://github.com/shader-slang/slang/) shader language. Supporting both the modern compilation and reflection API.
 
-Currently mostly reflects the needs of our own [engine](https://github.com/FloatyMonkey/engine) but issues and pull requests are more than welcome.
+Currently mostly reflects the needs of our own [engine](https://github.com/FloatyMonkey/engine) but contributions are more than welcome.
 
 ## Example
 
@@ -36,6 +36,9 @@ let program = session.create_composite_component_type(&[
 ]).unwrap();
 
 let linked_program = program.link().unwrap();
+
+// Entry point to the reflection API.
+let reflection = linked_program.layout(0).unwrap();
 
 let shader_bytecode = linked_program.get_entry_point_code(0, 0).unwrap();
 ```
