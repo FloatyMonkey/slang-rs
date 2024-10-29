@@ -7,6 +7,13 @@ use std::ffi::{c_char, c_int, c_void};
 // Based on Slang version 2024.14.3
 
 #[repr(C)]
+pub struct ICastableVtable {
+	pub _base: ISlangUnknown__bindgen_vtable,
+
+	pub castAs: unsafe extern "C" fn(*mut c_void, guid: *const SlangUUID) -> *mut c_void,
+}
+
+#[repr(C)]
 pub struct IBlobVtable {
 	pub _base: ISlangUnknown__bindgen_vtable,
 
@@ -70,6 +77,13 @@ pub struct ISessionVtable {
 	pub getLoadedModule: unsafe extern "C" fn(*mut c_void, index: SlangInt) -> *mut slang_IModule,
 	pub isBinaryModuleUpToDate: unsafe extern "C" fn(*mut c_void, modulePath: *const c_char, binaryModuleBlob: *mut ISlangBlob) -> bool,
 	pub loadModuleFromSourceString: unsafe extern "C" fn(*mut c_void, moduleName: *const c_char, path: *const c_char, string: *const c_char, outDiagnostics: *mut *mut ISlangBlob) -> *mut slang_IModule,
+}
+
+#[repr(C)]
+pub struct IMetadataVtable {
+	pub _base: ICastableVtable,
+
+	pub isParameterLocationUsed: unsafe extern "C" fn(*mut c_void, category: SlangParameterCategory, spaceIndex: SlangUInt, registerIndex: SlangUInt, outUsed: *mut bool) -> SlangResult,
 }
 
 #[repr(C)]

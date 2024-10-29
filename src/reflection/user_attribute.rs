@@ -1,10 +1,6 @@
 use super::{rcall, Type};
 use slang_sys as sys;
 
-fn succeeded(result: sys::SlangResult) -> bool {
-	result >= 0
-}
-
 #[repr(transparent)]
 pub struct UserAttribute(sys::SlangReflectionUserAttribute);
 
@@ -28,7 +24,7 @@ impl UserAttribute {
 			self, index, &mut out
 		));
 
-		succeeded(result).then(|| out)
+		crate::succeeded(result).then(|| out)
 	}
 
 	pub fn argument_value_float(&self, index: u32) -> Option<f32> {
@@ -37,7 +33,7 @@ impl UserAttribute {
 			self, index, &mut out
 		));
 
-		succeeded(result).then(|| out)
+		crate::succeeded(result).then(|| out)
 	}
 
 	pub fn argument_value_string(&self, index: u32) -> Option<&str> {

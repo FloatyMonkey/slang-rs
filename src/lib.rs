@@ -10,8 +10,8 @@ pub use sys::{
 	slang_TargetDesc as TargetDesc, SlangCompileTarget as CompileTarget,
 	SlangDebugInfoLevel as DebugInfoLevel, SlangFloatingPointMode as FloatingPointMode,
 	SlangLineDirectiveMode as LineDirectiveMode, SlangMatrixLayoutMode as MatrixLayoutMode,
-	SlangOptimizationLevel as OptimizationLevel, SlangSourceLanguage as SourceLanguage,
-	SlangStage as Stage, SlangUUID as UUID,
+	SlangOptimizationLevel as OptimizationLevel, SlangParameterCategory as ParameterCategory,
+	SlangSourceLanguage as SourceLanguage, SlangStage as Stage, SlangUUID as UUID,
 };
 
 macro_rules! vcall {
@@ -44,6 +44,10 @@ impl std::fmt::Debug for Error {
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
+
+pub(crate) fn succeeded(result: sys::SlangResult) -> bool {
+	result >= 0
+}
 
 fn result_from_blob(code: sys::SlangResult, blob: *mut sys::slang_IBlob) -> Result<()> {
 	if code < 0 {
@@ -259,6 +263,36 @@ impl Session {
 
 #[repr(transparent)]
 #[derive(Clone)]
+pub struct Metadata(IUnknown);
+
+unsafe impl Interface for Metadata {
+	type Vtable = sys::IMetadataVtable;
+	const IID: UUID = uuid(
+		0x8044a8a3,
+		0xddc0,
+		0x4b7f,
+		[0xaf, 0x8e, 0x2, 0x6e, 0x90, 0x5d, 0x73, 0x32],
+	);
+}
+
+impl Metadata {
+	pub fn is_parameter_location_used(
+		&self,
+		category: ParameterCategory,
+		space_index: u64,
+		register_index: u64,
+	) -> Option<bool> {
+		let mut used = false;
+		let res = vcall!(
+			self,
+			isParameterLocationUsed(category, space_index, register_index, &mut used)
+		);
+		succeeded(res).then(|| used)
+	}
+}
+
+#[repr(transparent)]
+#[derive(Clone)]
 pub struct ComponentType(IUnknown);
 
 unsafe impl Interface for ComponentType {
@@ -313,6 +347,49 @@ impl ComponentType {
 
 		Ok(Blob(IUnknown(
 			std::ptr::NonNull::new(code as *mut _).unwrap(),
+		)))
+	}
+
+	pub fn target_metadata(&self, target_index: i64) -> Result<Metadata> {
+		let mut metadata = null_mut();
+		let mut diagnostics = null_mut();
+
+		result_from_blob(
+			vcall!(
+				self,
+				getTargetMetadata(target_index, &mut metadata, &mut diagnostics)
+			),
+			diagnostics,
+		)?;
+
+		Ok(Metadata(IUnknown(
+			std::ptr::NonNull::new(metadata as *mut _).unwrap(),
+		)))
+	}
+
+	pub fn entry_point_metadata(
+		&self,
+		entry_point_index: i64,
+		target_index: i64,
+	) -> Result<Metadata> {
+		let mut metadata = null_mut();
+		let mut diagnostics = null_mut();
+
+		result_from_blob(
+			vcall!(
+				self,
+				getEntryPointMetadata(
+					entry_point_index,
+					target_index,
+					&mut metadata,
+					&mut diagnostics
+				)
+			),
+			diagnostics,
+		)?;
+
+		Ok(Metadata(IUnknown(
+			std::ptr::NonNull::new(metadata as *mut _).unwrap(),
 		)))
 	}
 
