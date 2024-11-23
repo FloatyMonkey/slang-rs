@@ -4,7 +4,7 @@ include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 use std::ffi::{c_char, c_int, c_void};
 
-// Based on Slang version 2024.14.3
+// Based on Slang version 2024.14.5
 
 #[repr(C)]
 pub struct ICastableVtable {
@@ -43,9 +43,9 @@ pub struct IGlobalSessionVtable {
 	pub getSharedLibraryLoader: unsafe extern "C" fn(*mut c_void) -> *mut ISlangSharedLibraryLoader,
 	pub checkCompileTargetSupport: unsafe extern "C" fn(*mut c_void, target: SlangCompileTarget) -> SlangResult,
 	pub checkPassThroughSupport: unsafe extern "C" fn(*mut c_void, passThrough: SlangPassThrough) -> SlangResult,
-	pub compileStdLib: unsafe extern "C" fn(*mut c_void, flags: slang_CompileStdLibFlags) -> SlangResult,
-	pub loadStdLib: unsafe extern "C" fn(*mut c_void, stdLib: *const c_void, stdLibSizeInBytes: usize) -> SlangResult,
-	pub saveStdLib: unsafe extern "C" fn(*mut c_void, archiveType: SlangArchiveType, outBlob: *mut *mut ISlangBlob) -> SlangResult,
+	pub compileCoreModule: unsafe extern "C" fn(*mut c_void, flags: slang_CompileCoreModuleFlags) -> SlangResult,
+	pub loadCoreModule: unsafe extern "C" fn(*mut c_void, coreModule: *const c_void, coreModuleSizeInBytes: usize) -> SlangResult,
+	pub saveCoreModule: unsafe extern "C" fn(*mut c_void, archiveType: SlangArchiveType, outBlob: *mut *mut ISlangBlob) -> SlangResult,
 	pub findCapability: unsafe extern "C" fn(*mut c_void, name: *const c_char) -> SlangCapabilityID,
 	pub setDownstreamCompilerForTransition: unsafe extern "C" fn(*mut c_void, source: SlangCompileTarget, target: SlangCompileTarget, compiler: SlangPassThrough),
 	pub getDownstreamCompilerForTransition: unsafe extern "C" fn(*mut c_void, source: SlangCompileTarget, target: SlangCompileTarget) -> SlangPassThrough,
@@ -109,6 +109,8 @@ pub struct IComponentTypeVtable {
 #[repr(C)]
 pub struct IEntryPointVtable {
 	pub _base: IComponentTypeVtable,
+
+	pub getFunctionReflection: unsafe extern "C" fn(*mut c_void) -> *mut slang_FunctionReflection,
 }
 
 #[repr(C)]

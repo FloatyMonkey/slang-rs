@@ -170,10 +170,10 @@ impl GlobalSession {
 		)?)))
 	}
 
-	pub fn new_without_std_lib() -> Option<GlobalSession> {
+	pub fn new_without_core_module() -> Option<GlobalSession> {
 		let mut global_session = null_mut();
 		unsafe {
-			sys::slang_createGlobalSessionWithoutStdLib(
+			sys::slang_createGlobalSessionWithoutCoreModule(
 				sys::SLANG_API_VERSION as _,
 				&mut global_session,
 			)
