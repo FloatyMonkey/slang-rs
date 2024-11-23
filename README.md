@@ -22,7 +22,7 @@ let target_desc = slang::TargetDescBuilder::new()
 
 let session_desc = slang::SessionDescBuilder::new()
 	.targets(&[*target_desc])
-	.search_paths(&[include_path.as_ptr()])
+	.search_paths(&[search_path.as_ptr()])
 	.options(&session_options);
 
 let session = self.global_session.create_session(&session_desc).unwrap();
@@ -40,7 +40,7 @@ let linked_program = program.link().unwrap();
 // Entry point to the reflection API.
 let reflection = linked_program.layout(0).unwrap();
 
-let shader_bytecode = linked_program.get_entry_point_code(0, 0).unwrap();
+let shader_bytecode = linked_program.entry_point_code(0, 0).unwrap();
 ```
 
 ## Installation
