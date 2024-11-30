@@ -4,6 +4,7 @@ use std::env;
 use std::path::{Path, PathBuf};
 
 fn main() {
+	println!("cargo:rerun-if-env-changed=SLANG_DIR");
 	let slang_dir = env::var("SLANG_DIR").map(PathBuf::from).expect(
 		"Environment variable `SLANG_DIR` should be set to the directory of a Slang installation.",
 	);
