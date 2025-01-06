@@ -392,11 +392,6 @@ impl ComponentType {
 			std::ptr::NonNull::new(metadata as *mut _).unwrap(),
 		)))
 	}
-
-	#[deprecated = "Use `entry_point_code` instead"]
-	pub fn get_entry_point_code(&self, index: i64, target: i64) -> Result<Blob> {
-		self.entry_point_code(index, target)
-	}
 }
 
 #[repr(transparent)]

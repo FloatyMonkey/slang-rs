@@ -18,14 +18,14 @@ let session_options = slang::OptionsBuilder::new()
 
 let target_desc = slang::TargetDescBuilder::new()
 	.format(slang::CompileTarget::Dxil)
-	.profile(self.global_session.find_profile("sm_6_5"));
+	.profile(global_session.find_profile("sm_6_5"));
 
 let session_desc = slang::SessionDescBuilder::new()
 	.targets(&[*target_desc])
 	.search_paths(&[search_path.as_ptr()])
 	.options(&session_options);
 
-let session = self.global_session.create_session(&session_desc).unwrap();
+let session = global_session.create_session(&session_desc).unwrap();
 
 let module = session.load_module("filename.slang").unwrap();
 
