@@ -5,9 +5,9 @@ use slang_sys as sys;
 pub struct Variable(sys::SlangReflectionVariable);
 
 impl Variable {
-	pub fn name(&self) -> &str {
+	pub fn name(&self) -> Option<&str> {
 		let name = rcall!(spReflectionVariable_GetName(self));
-		unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() }
+		unsafe { (!name.is_null()).then(|| std::ffi::CStr::from_ptr(name).to_str().unwrap()) }
 	}
 
 	pub fn ty(&self) -> &Type {
