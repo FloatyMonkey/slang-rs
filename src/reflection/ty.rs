@@ -60,9 +60,9 @@ impl Type {
 		rcall!(spReflectionType_GetResourceAccess(self))
 	}
 
-	pub fn name(&self) -> &str {
+	pub fn name(&self) -> Option<&str> {
 		let name = rcall!(spReflectionType_GetName(self));
-		unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() }
+		unsafe { (!name.is_null()).then(|| std::ffi::CStr::from_ptr(name).to_str().unwrap()) }
 	}
 
 	// TODO: full_name
@@ -194,7 +194,7 @@ impl TypeLayout {
 		self.ty().resource_access()
 	}
 
-	pub fn name(&self) -> &str {
+	pub fn name(&self) -> Option<&str> {
 		self.ty().name()
 	}
 
