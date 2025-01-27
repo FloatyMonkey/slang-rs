@@ -8,17 +8,20 @@ fn compile() {
 	let search_path = std::ffi::CString::new("shaders").unwrap();
 
 	// All compiler options are available through this builder.
-	let session_options = slang::OptionsBuilder::new()
+	let session_options = slang::CompilerOptions::default()
 		.optimization(slang::OptimizationLevel::High)
 		.matrix_layout_row(true);
 
-	let target_desc = slang::TargetDescBuilder::new()
+	let target_desc = slang::TargetDesc::default()
 		.format(slang::CompileTarget::Dxil)
 		.profile(global_session.find_profile("sm_6_5"));
 
-	let session_desc = slang::SessionDescBuilder::new()
-		.targets(&[*target_desc])
-		.search_paths(&[search_path.as_ptr()])
+	let targets = [target_desc];
+	let search_paths = [search_path.as_ptr()];
+
+	let session_desc = slang::SessionDesc::default()
+		.targets(&targets)
+		.search_paths(&search_paths)
 		.options(&session_options);
 
 	let session = global_session.create_session(&session_desc).unwrap();

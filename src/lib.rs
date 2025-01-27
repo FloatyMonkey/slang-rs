@@ -4,13 +4,13 @@ pub mod reflection;
 mod tests;
 
 use std::ffi::{CStr, CString};
+use std::marker::PhantomData;
 use std::ptr::{null, null_mut};
 
 use slang_sys as sys;
 
 pub use sys::{
-	slang_CompilerOptionName as CompilerOptionName, slang_SessionDesc as SessionDesc,
-	slang_TargetDesc as TargetDesc, SlangCompileTarget as CompileTarget,
+	slang_CompilerOptionName as CompilerOptionName, SlangCompileTarget as CompileTarget,
 	SlangDebugInfoLevel as DebugInfoLevel, SlangFloatingPointMode as FloatingPointMode,
 	SlangLineDirectiveMode as LineDirectiveMode, SlangMatrixLayoutMode as MatrixLayoutMode,
 	SlangOptimizationLevel as OptimizationLevel, SlangParameterCategory as ParameterCategory,
@@ -53,10 +53,12 @@ pub(crate) fn succeeded(result: sys::SlangResult) -> bool {
 }
 
 fn result_from_blob(code: sys::SlangResult, blob: *mut sys::slang_IBlob) -> Result<()> {
-	if code < 0 {
+	if code < 0 && !blob.is_null() {
 		Err(Error::Blob(Blob(IUnknown(
 			std::ptr::NonNull::new(blob as *mut _).unwrap(),
 		))))
+	} else if code < 0 {
+		Err(Error::Code(code))
 	} else {
 		Ok(())
 	}
@@ -188,7 +190,7 @@ impl GlobalSession {
 
 	pub fn create_session(&self, desc: &SessionDesc) -> Option<Session> {
 		let mut session = null_mut();
-		vcall!(self, createSession(desc, &mut session));
+		vcall!(self, createSession(&**desc, &mut session));
 		Some(Session(IUnknown(std::ptr::NonNull::new(
 			session as *mut _,
 		)?)))
@@ -488,20 +490,33 @@ impl Module {
 	}
 }
 
-pub struct TargetDescBuilder {
-	inner: TargetDesc,
+#[repr(transparent)]
+pub struct TargetDesc<'a> {
+	inner: sys::slang_TargetDesc,
+	_phantom: PhantomData<&'a ()>,
 }
 
-impl TargetDescBuilder {
-	pub fn new() -> TargetDescBuilder {
+impl std::ops::Deref for TargetDesc<'_> {
+	type Target = sys::slang_TargetDesc;
+
+	fn deref(&self) -> &Self::Target {
+		&self.inner
+	}
+}
+
+impl Default for TargetDesc<'_> {
+	fn default() -> Self {
 		Self {
-			inner: TargetDesc {
-				structureSize: std::mem::size_of::<TargetDesc>(),
+			inner: sys::slang_TargetDesc {
+				structureSize: std::mem::size_of::<sys::slang_TargetDesc>(),
 				..unsafe { std::mem::zeroed() }
 			},
+			_phantom: PhantomData,
 		}
 	}
+}
 
+impl<'a> TargetDesc<'a> {
 	pub fn format(mut self, format: CompileTarget) -> Self {
 		self.inner.format = format;
 		self
@@ -512,59 +527,56 @@ impl TargetDescBuilder {
 		self
 	}
 
-	pub fn options(mut self, options: &OptionsBuilder) -> Self {
+	pub fn options(mut self, options: &'a CompilerOptions) -> Self {
 		self.inner.compilerOptionEntries = options.options.as_ptr() as _;
 		self.inner.compilerOptionEntryCount = options.options.len() as _;
 		self
 	}
 }
 
-impl std::ops::Deref for TargetDescBuilder {
-	type Target = TargetDesc;
+#[repr(transparent)]
+pub struct SessionDesc<'a> {
+	inner: sys::slang_SessionDesc,
+	_phantom: PhantomData<&'a ()>,
+}
+
+impl std::ops::Deref for SessionDesc<'_> {
+	type Target = sys::slang_SessionDesc;
 
 	fn deref(&self) -> &Self::Target {
 		&self.inner
 	}
 }
 
-pub struct SessionDescBuilder {
-	inner: SessionDesc,
-}
-
-impl SessionDescBuilder {
-	pub fn new() -> SessionDescBuilder {
+impl Default for SessionDesc<'_> {
+	fn default() -> Self {
 		Self {
-			inner: SessionDesc {
-				structureSize: std::mem::size_of::<SessionDesc>(),
+			inner: sys::slang_SessionDesc {
+				structureSize: std::mem::size_of::<sys::slang_SessionDesc>(),
 				..unsafe { std::mem::zeroed() }
 			},
+			_phantom: PhantomData,
 		}
 	}
+}
 
-	pub fn targets(mut self, targets: &[TargetDesc]) -> Self {
-		self.inner.targets = targets.as_ptr();
+impl<'a> SessionDesc<'a> {
+	pub fn targets(mut self, targets: &'a [TargetDesc]) -> Self {
+		self.inner.targets = targets.as_ptr() as _;
 		self.inner.targetCount = targets.len() as _;
 		self
 	}
 
-	pub fn search_paths(mut self, paths: &[*const i8]) -> Self {
+	pub fn search_paths(mut self, paths: &'a [*const i8]) -> Self {
 		self.inner.searchPaths = paths.as_ptr();
 		self.inner.searchPathCount = paths.len() as _;
 		self
 	}
 
-	pub fn options(mut self, options: &OptionsBuilder) -> Self {
+	pub fn options(mut self, options: &'a CompilerOptions) -> Self {
 		self.inner.compilerOptionEntries = options.options.as_ptr() as _;
 		self.inner.compilerOptionEntryCount = options.options.len() as _;
 		self
-	}
-}
-
-impl std::ops::Deref for SessionDescBuilder {
-	type Target = SessionDesc;
-
-	fn deref(&self) -> &Self::Target {
-		&self.inner
 	}
 }
 
@@ -591,19 +603,13 @@ macro_rules! option {
 	};
 }
 
-pub struct OptionsBuilder {
+#[derive(Default)]
+pub struct CompilerOptions {
 	strings: Vec<CString>,
 	options: Vec<sys::slang_CompilerOptionEntry>,
 }
 
-impl OptionsBuilder {
-	pub fn new() -> OptionsBuilder {
-		OptionsBuilder {
-			strings: Vec::new(),
-			options: Vec::new(),
-		}
-	}
-
+impl CompilerOptions {
 	fn push_ints(mut self, name: CompilerOptionName, i0: i32, i1: i32) -> Self {
 		self.options.push(sys::slang_CompilerOptionEntry {
 			name,
@@ -655,7 +661,7 @@ impl OptionsBuilder {
 	}
 }
 
-impl OptionsBuilder {
+impl CompilerOptions {
 	option!(MacroDefine, macro_define(key: &str, value: &str));
 	option!(Include, include(path: &str));
 	option!(Language, language(language: SourceLanguage));
