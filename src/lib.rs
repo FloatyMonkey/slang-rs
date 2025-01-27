@@ -1,5 +1,8 @@
 pub mod reflection;
 
+#[cfg(test)]
+mod tests;
+
 use std::ffi::{CStr, CString};
 use std::ptr::{null, null_mut};
 
@@ -697,10 +700,4 @@ impl OptionsBuilder {
 	// Experimental
 	option!(NoMangle, no_mangle(enable: bool));
 	option!(ValidateUniformity, validate_uniformity(enable: bool));
-}
-
-#[cfg(test)]
-mod tests {
-	#[test]
-	fn compiles() {}
 }
