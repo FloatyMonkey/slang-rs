@@ -41,7 +41,8 @@ impl EntryPoint {
 		let mut out_size: [u64; 3] = [0; 3];
 		rcall!(spReflectionEntryPoint_getComputeThreadGroupSize(self, 3, &mut out_size as *mut u64));
 		out_size
-	} 
+	}
+
 	// TODO: compute_wave_size
 
 	pub fn uses_any_sample_rate_input(&self) -> bool {

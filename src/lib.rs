@@ -7,7 +7,7 @@ use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
 use std::ptr::{null, null_mut};
 
-use slang_sys::{self as sys, SlangInt32};
+use slang_sys as sys;
 
 pub use sys::{
 	slang_CompilerOptionName as CompilerOptionName, SlangBindingType as BindingType,
@@ -422,7 +422,7 @@ unsafe impl Downcast<ComponentType> for EntryPoint {
 }
 
 impl EntryPoint {
-	pub fn get_function_reflection(&self) -> &reflection::Function {
+	pub fn function_reflection(&self) -> &reflection::Function {
 		let ptr = vcall!(self, getFunctionReflection());
 		unsafe { &*(ptr as *const _) }
 	}
@@ -478,13 +478,13 @@ impl Module {
 		)?)))
 	}
 
-	pub fn get_defined_entry_point_count(&self) -> SlangInt32 {
-		vcall!(self, getDefinedEntryPointCount())
+	pub fn entry_point_count(&self) -> u32 {
+		vcall!(self, getDefinedEntryPointCount()) as _
 	}
 
-	pub fn get_defined_entry_point(&self, index: SlangInt32) -> Option<EntryPoint> {
+	pub fn entry_point_by_index(&self, index: u32) -> Option<EntryPoint> {
 		let mut entry_point = null_mut();
-		vcall!(self, getDefinedEntryPoint(index, &mut entry_point));
+		vcall!(self, getDefinedEntryPoint(index as _, &mut entry_point));
 		Some(EntryPoint(IUnknown(std::ptr::NonNull::new(
 			entry_point as *mut _,
 		)?)))
