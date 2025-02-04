@@ -10,11 +10,13 @@ use std::ptr::{null, null_mut};
 use slang_sys as sys;
 
 pub use sys::{
-	slang_CompilerOptionName as CompilerOptionName, SlangCompileTarget as CompileTarget,
-	SlangDebugInfoLevel as DebugInfoLevel, SlangFloatingPointMode as FloatingPointMode,
-	SlangLineDirectiveMode as LineDirectiveMode, SlangMatrixLayoutMode as MatrixLayoutMode,
-	SlangOptimizationLevel as OptimizationLevel, SlangParameterCategory as ParameterCategory,
-	SlangSourceLanguage as SourceLanguage, SlangStage as Stage, SlangUUID as UUID,
+	slang_CompilerOptionName as CompilerOptionName, SlangBindingType as BindingType,
+	SlangCompileTarget as CompileTarget, SlangDebugInfoLevel as DebugInfoLevel,
+	SlangFloatingPointMode as FloatingPointMode, SlangLineDirectiveMode as LineDirectiveMode,
+	SlangMatrixLayoutMode as MatrixLayoutMode, SlangOptimizationLevel as OptimizationLevel,
+	SlangParameterCategory as ParameterCategory, SlangResourceShape as ResourceShape,
+	SlangScalarType as ScalarType, SlangSourceLanguage as SourceLanguage, SlangStage as Stage,
+	SlangTypeKind as TypeKind, SlangUUID as UUID,
 };
 
 macro_rules! vcall {
@@ -419,6 +421,13 @@ unsafe impl Downcast<ComponentType> for EntryPoint {
 	}
 }
 
+impl EntryPoint {
+	pub fn function_reflection(&self) -> &reflection::Function {
+		let ptr = vcall!(self, getFunctionReflection());
+		unsafe { &*(ptr as *const _) }
+	}
+}
+
 #[repr(transparent)]
 #[derive(Clone)]
 pub struct TypeConformance(IUnknown);
@@ -464,6 +473,18 @@ impl Module {
 		let name = CString::new(name).unwrap();
 		let mut entry_point = null_mut();
 		vcall!(self, findEntryPointByName(name.as_ptr(), &mut entry_point));
+		Some(EntryPoint(IUnknown(std::ptr::NonNull::new(
+			entry_point as *mut _,
+		)?)))
+	}
+
+	pub fn entry_point_count(&self) -> u32 {
+		vcall!(self, getDefinedEntryPointCount()) as _
+	}
+
+	pub fn entry_point_by_index(&self, index: u32) -> Option<EntryPoint> {
+		let mut entry_point = null_mut();
+		vcall!(self, getDefinedEntryPoint(index as _, &mut entry_point));
 		Some(EntryPoint(IUnknown(std::ptr::NonNull::new(
 			entry_point as *mut _,
 		)?)))
