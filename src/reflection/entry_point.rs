@@ -38,8 +38,12 @@ impl EntryPoint {
 	}
 
 	pub fn compute_thread_group_size(&self) -> [u64; 3] {
-		let mut out_size: [u64; 3] = [0; 3];
-		rcall!(spReflectionEntryPoint_getComputeThreadGroupSize(self, 3, &mut out_size as *mut u64));
+		let mut out_size = [0; 3];
+		rcall!(spReflectionEntryPoint_getComputeThreadGroupSize(
+			self,
+			3,
+			&mut out_size as *mut u64
+		));
 		out_size
 	}
 
