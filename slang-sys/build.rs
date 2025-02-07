@@ -5,9 +5,17 @@ use std::path::{Path, PathBuf};
 
 fn main() {
 	println!("cargo:rerun-if-env-changed=SLANG_DIR");
-	let slang_dir = env::var("SLANG_DIR").map(PathBuf::from).expect(
-		"Environment variable `SLANG_DIR` should be set to the directory of a Slang installation.",
-	);
+	println!("cargo:rerun-if-env-changed=VULKAN_SDK");
+	let mut include_file = PathBuf::from("include");
+	let slang_dir = if let Ok(slang_dir) = env::var("SLANG_DIR").map(PathBuf::from) {
+		include_file = include_file.join("slang.h");
+		slang_dir
+	} else if let Ok(vulkan_sdk_dir) = env::var("VULKAN_SDK").map(PathBuf::from) {
+		include_file = include_file.join("slang/slang.h");
+		vulkan_sdk_dir
+	} else {
+		panic!("Environment `SLANG_DIR` should be set to the directory of a Slang installation, or `VULKAN_SDK` should be set to the directory of the Vulkan SKD installation.");
+	};
 
 	let out_dir = env::var("OUT_DIR")
 		.map(PathBuf::from)
@@ -16,7 +24,7 @@ fn main() {
 	link_libraries(&slang_dir);
 
 	bindgen::builder()
-		.header(slang_dir.join("include/slang.h").to_str().unwrap())
+		.header(slang_dir.join(include_file).to_str().unwrap())
 		.clang_arg("-v")
 		.clang_arg("-xc++")
 		.clang_arg("-std=c++17")
