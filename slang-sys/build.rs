@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 fn main() {
 	println!("cargo:rerun-if-env-changed=SLANG_DIR");
 	println!("cargo:rerun-if-env-changed=VULKAN_SDK");
+
 	let mut include_file = PathBuf::from("include");
 	let slang_dir = if let Ok(slang_dir) = env::var("SLANG_DIR").map(PathBuf::from) {
 		include_file = include_file.join("slang.h");

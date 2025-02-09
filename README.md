@@ -52,9 +52,9 @@ Add the following to the `[dependencies]` section of your `Cargo.toml`:
 slang = { git = "https://github.com/FloatyMonkey/slang-rs.git" }
 ```
 
-Set the `SLANG_DIR` environment variable to the path of your Slang installation. Download the latest release from their [releases page](https://github.com/shader-slang/slang/releases). Copy `slang.dll` to your executable's directory.
+Point this library to a Slang installation. An easy way is by installing the [LunarG Vulkan SDK](https://vulkan.lunarg.com) which comes bundled with the Slang compiler. During installation `VULKAN_SDK` is added to the `PATH` and automatically picked up by this library.
 
-To compile to DXIL bytecode you need the Microsoft DirectXShaderCompiler. Download the latest release from their [releases page](https://github.com/microsoft/DirectXShaderCompiler/releases). Copy `dxil.dll` and `dxcompiler.dll` to your executable's directory.
+Alternatively, download Slang from their [releases page](https://github.com/shader-slang/slang/releases) and manually set the `SLANG_DIR` environment variable to the path of your Slang directory. Copy `slang.dll` to your executable's directory. To compile to DXIL bytecode, also copy `dxil.dll` and `dxcompiler.dll` from the [Microsoft DirectXShaderCompiler](https://github.com/microsoft/DirectXShaderCompiler/releases) to your executable's directory.
 
 ## Credits
 
