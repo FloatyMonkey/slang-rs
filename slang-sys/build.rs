@@ -30,6 +30,7 @@ fn main() {
 		.clang_arg("-xc++")
 		.clang_arg("-std=c++17")
 		.allowlist_function("spReflection.*")
+		.allowlist_function("spComputeStringHash")
 		.allowlist_function("slang_.*")
 		.allowlist_type("slang.*")
 		.allowlist_var("SLANG_.*")

@@ -12,11 +12,12 @@ use slang_sys as sys;
 pub use sys::{
 	slang_CompilerOptionName as CompilerOptionName, SlangBindingType as BindingType,
 	SlangCompileTarget as CompileTarget, SlangDebugInfoLevel as DebugInfoLevel,
-	SlangFloatingPointMode as FloatingPointMode, SlangLineDirectiveMode as LineDirectiveMode,
-	SlangMatrixLayoutMode as MatrixLayoutMode, SlangOptimizationLevel as OptimizationLevel,
-	SlangParameterCategory as ParameterCategory, SlangResourceShape as ResourceShape,
-	SlangScalarType as ScalarType, SlangSourceLanguage as SourceLanguage, SlangStage as Stage,
-	SlangTypeKind as TypeKind, SlangUUID as UUID,
+	SlangFloatingPointMode as FloatingPointMode, SlangImageFormat as ImageFormat,
+	SlangLineDirectiveMode as LineDirectiveMode, SlangMatrixLayoutMode as MatrixLayoutMode,
+	SlangOptimizationLevel as OptimizationLevel, SlangParameterCategory as ParameterCategory,
+	SlangResourceShape as ResourceShape, SlangScalarType as ScalarType,
+	SlangSourceLanguage as SourceLanguage, SlangStage as Stage, SlangTypeKind as TypeKind,
+	SlangUUID as UUID,
 };
 
 macro_rules! vcall {
@@ -337,6 +338,20 @@ impl ComponentType {
 
 		Ok(ComponentType(IUnknown(
 			std::ptr::NonNull::new(linked_component_type as *mut _).unwrap(),
+		)))
+	}
+
+	pub fn target_code(&self, target: i64) -> Result<Blob> {
+		let mut code = null_mut();
+		let mut diagnostics = null_mut();
+
+		result_from_blob(
+			vcall!(self, getTargetCode(target, &mut code, &mut diagnostics)),
+			diagnostics,
+		)?;
+
+		Ok(Blob(IUnknown(
+			std::ptr::NonNull::new(code as *mut _).unwrap(),
 		)))
 	}
 
