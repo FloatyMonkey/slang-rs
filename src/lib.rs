@@ -12,11 +12,12 @@ use slang_sys as sys;
 pub use sys::{
 	slang_CompilerOptionName as CompilerOptionName, SlangBindingType as BindingType,
 	SlangCompileTarget as CompileTarget, SlangDebugInfoLevel as DebugInfoLevel,
-	SlangFloatingPointMode as FloatingPointMode, SlangLineDirectiveMode as LineDirectiveMode,
-	SlangMatrixLayoutMode as MatrixLayoutMode, SlangOptimizationLevel as OptimizationLevel,
-	SlangParameterCategory as ParameterCategory, SlangResourceShape as ResourceShape,
-	SlangScalarType as ScalarType, SlangSourceLanguage as SourceLanguage, SlangStage as Stage,
-	SlangTypeKind as TypeKind, SlangUUID as UUID,
+	SlangFloatingPointMode as FloatingPointMode, SlangImageFormat as ImageFormat,
+	SlangLineDirectiveMode as LineDirectiveMode, SlangMatrixLayoutMode as MatrixLayoutMode,
+	SlangOptimizationLevel as OptimizationLevel, SlangParameterCategory as ParameterCategory,
+	SlangResourceShape as ResourceShape, SlangScalarType as ScalarType,
+	SlangSourceLanguage as SourceLanguage, SlangStage as Stage, SlangTypeKind as TypeKind,
+	SlangUUID as UUID,
 };
 
 macro_rules! vcall {
