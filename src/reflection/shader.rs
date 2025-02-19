@@ -124,7 +124,6 @@ impl Shader {
 	}
 }
 
-
-pub fn get_string_hash(string: &str) -> u32 {
+pub fn compute_string_hash(string: &str) -> u32 {
 	rcall!(spComputeStringHash(string, string.len()))
 }
