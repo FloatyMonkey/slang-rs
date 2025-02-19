@@ -90,7 +90,7 @@ impl Shader {
 		)
 	}
 
-	fn type_layout(&self, ty: &Type, rules: sys::SlangLayoutRules) -> Option<&TypeLayout> {
+	pub fn type_layout(&self, ty: &Type, rules: sys::SlangLayoutRules) -> Option<&TypeLayout> {
 		rcall!(
 			spReflection_GetTypeLayout(self, ty as *const _ as *mut _, rules)
 				as Option<&TypeLayout>
@@ -122,4 +122,8 @@ impl Shader {
 	pub fn global_params_var_layout(&self) -> &VariableLayout {
 		rcall!(spReflection_getGlobalParamsVarLayout(self) as &VariableLayout)
 	}
+}
+
+pub fn compute_string_hash(string: &str) -> u32 {
+	rcall!(spComputeStringHash(string, string.len()))
 }
