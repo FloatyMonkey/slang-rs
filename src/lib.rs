@@ -73,6 +73,8 @@ impl std::fmt::Debug for Error {
 	}
 }
 
+unsafe impl Send for Error {}
+
 pub type Result<T> = std::result::Result<T, Error>;
 
 pub(crate) fn succeeded(result: sys::SlangResult) -> bool {
