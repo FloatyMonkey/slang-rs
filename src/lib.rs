@@ -44,7 +44,7 @@ pub enum Error {
 impl Display for Error {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
-			Self::Code(code) => {
+			Self::Code(_) => {
 				write!(f, "unspecified error")
 			}
 			Self::Blob(blob) => {
@@ -74,6 +74,7 @@ impl std::fmt::Debug for Error {
 }
 
 unsafe impl Send for Error {}
+unsafe impl Sync for Error {}
 
 pub type Result<T> = std::result::Result<T, Error>;
 
