@@ -4,6 +4,7 @@ pub mod reflection;
 mod tests;
 
 use std::ffi::{CStr, CString};
+use std::fmt::Display;
 use std::marker::PhantomData;
 use std::ptr::{null, null_mut};
 
@@ -38,6 +39,29 @@ const fn uuid(data1: u32, data2: u16, data3: u16, data4: [u8; 8]) -> UUID {
 pub enum Error {
 	Code(sys::SlangResult),
 	Blob(Blob),
+}
+
+impl Display for Error {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::Code(code) => {
+				write!(f, "unspecified error")
+			}
+			Self::Blob(blob) => {
+				if let Ok(a) = blob.as_str() {
+					write!(f, "{}", a)
+				} else {
+					Ok(())
+				}
+			}
+		}
+	}
+}
+
+impl std::error::Error for Error {
+	fn description(&self) -> &str {
+		"slang error"
+	}
 }
 
 impl std::fmt::Debug for Error {
