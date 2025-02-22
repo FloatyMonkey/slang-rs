@@ -98,12 +98,18 @@ pub struct ProfileID(sys::SlangProfileID);
 
 impl ProfileID {
 	pub const UNKNOWN: ProfileID = ProfileID(sys::SlangProfileID_SlangProfileUnknown);
+	pub fn is_unknown(&self) -> bool {
+		self.0 == sys::SlangProfileID_SlangProfileUnknown
+	}
 }
 
 pub struct CapabilityID(sys::SlangCapabilityID);
 
 impl CapabilityID {
 	pub const UNKNOWN: CapabilityID = CapabilityID(sys::SlangCapabilityID_SlangCapabilityUnknown);
+	pub fn is_unknown(&self) -> bool {
+		self.0 == sys::SlangCapabilityID_SlangCapabilityUnknown
+	}
 }
 
 unsafe trait Interface: Sized {
