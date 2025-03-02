@@ -15,7 +15,9 @@ fn main() {
 		include_file = include_file.join("slang/slang.h");
 		vulkan_sdk_dir
 	} else {
-		panic!("Environment `SLANG_DIR` should be set to the directory of a Slang installation, or `VULKAN_SDK` should be set to the directory of the Vulkan SKD installation.");
+		panic!(
+			"Environment `SLANG_DIR` should be set to the directory of a Slang installation, or `VULKAN_SDK` should be set to the directory of the Vulkan SKD installation."
+		);
 	};
 
 	let out_dir = env::var("OUT_DIR")

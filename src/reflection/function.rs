@@ -1,4 +1,4 @@
-use super::{rcall, Type, UserAttribute, Variable};
+use super::{Type, UserAttribute, Variable, rcall};
 use slang_sys as sys;
 
 #[repr(transparent)]

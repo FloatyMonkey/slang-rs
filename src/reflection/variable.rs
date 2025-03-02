@@ -1,4 +1,4 @@
-use super::{rcall, Type, TypeLayout, UserAttribute};
+use super::{Type, TypeLayout, UserAttribute, rcall};
 use slang_sys as sys;
 
 #[repr(transparent)]

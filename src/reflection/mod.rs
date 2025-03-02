@@ -12,7 +12,7 @@ pub use decl::Decl;
 pub use entry_point::EntryPoint;
 pub use function::Function;
 pub use generic::Generic;
-pub use shader::{compute_string_hash, Shader};
+pub use shader::{Shader, compute_string_hash};
 pub use ty::{Type, TypeLayout};
 pub use type_parameter::TypeParameter;
 pub use user_attribute::UserAttribute;

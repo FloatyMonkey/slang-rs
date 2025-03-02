@@ -10,14 +10,14 @@ use std::ptr::{null, null_mut};
 use slang_sys as sys;
 
 pub use sys::{
-	slang_CompilerOptionName as CompilerOptionName, SlangBindingType as BindingType,
-	SlangCompileTarget as CompileTarget, SlangDebugInfoLevel as DebugInfoLevel,
-	SlangFloatingPointMode as FloatingPointMode, SlangImageFormat as ImageFormat,
-	SlangLineDirectiveMode as LineDirectiveMode, SlangMatrixLayoutMode as MatrixLayoutMode,
-	SlangOptimizationLevel as OptimizationLevel, SlangParameterCategory as ParameterCategory,
-	SlangResourceAccess as ResourceAccess, SlangResourceShape as ResourceShape,
-	SlangScalarType as ScalarType, SlangSourceLanguage as SourceLanguage, SlangStage as Stage,
-	SlangTypeKind as TypeKind, SlangUUID as UUID,
+	SlangBindingType as BindingType, SlangCompileTarget as CompileTarget,
+	SlangDebugInfoLevel as DebugInfoLevel, SlangFloatingPointMode as FloatingPointMode,
+	SlangImageFormat as ImageFormat, SlangLineDirectiveMode as LineDirectiveMode,
+	SlangMatrixLayoutMode as MatrixLayoutMode, SlangOptimizationLevel as OptimizationLevel,
+	SlangParameterCategory as ParameterCategory, SlangResourceAccess as ResourceAccess,
+	SlangResourceShape as ResourceShape, SlangScalarType as ScalarType,
+	SlangSourceLanguage as SourceLanguage, SlangStage as Stage, SlangTypeKind as TypeKind,
+	SlangUUID as UUID, slang_CompilerOptionName as CompilerOptionName,
 };
 
 macro_rules! vcall {
@@ -85,12 +85,12 @@ unsafe trait Interface: Sized {
 
 	#[inline(always)]
 	unsafe fn vtable(&self) -> &Self::Vtable {
-		&**(self.as_raw() as *mut *mut Self::Vtable)
+		unsafe { &**(self.as_raw() as *mut *mut Self::Vtable) }
 	}
 
 	#[inline(always)]
 	unsafe fn as_raw<T>(&self) -> *mut T {
-		std::mem::transmute_copy(self)
+		unsafe { std::mem::transmute_copy(self) }
 	}
 
 	fn as_unknown(&self) -> &IUnknown {

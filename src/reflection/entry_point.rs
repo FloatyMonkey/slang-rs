@@ -1,4 +1,4 @@
-use super::{rcall, Function, TypeLayout, VariableLayout};
+use super::{Function, TypeLayout, VariableLayout, rcall};
 use slang_sys as sys;
 
 #[repr(transparent)]

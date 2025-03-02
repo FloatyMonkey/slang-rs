@@ -1,4 +1,4 @@
-use super::{rcall, Function, Generic, Type, Variable};
+use super::{Function, Generic, Type, Variable, rcall};
 use slang_sys as sys;
 
 #[repr(transparent)]

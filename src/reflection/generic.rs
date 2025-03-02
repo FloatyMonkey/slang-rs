@@ -1,4 +1,4 @@
-use super::{rcall, Decl, Type, TypeParameter, Variable};
+use super::{Decl, Type, TypeParameter, Variable, rcall};
 use slang_sys as sys;
 
 #[repr(transparent)]
