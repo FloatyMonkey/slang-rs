@@ -15,9 +15,9 @@ pub use sys::{
 	SlangFloatingPointMode as FloatingPointMode, SlangImageFormat as ImageFormat,
 	SlangLineDirectiveMode as LineDirectiveMode, SlangMatrixLayoutMode as MatrixLayoutMode,
 	SlangOptimizationLevel as OptimizationLevel, SlangParameterCategory as ParameterCategory,
-	SlangResourceShape as ResourceShape, SlangScalarType as ScalarType,
-	SlangSourceLanguage as SourceLanguage, SlangStage as Stage, SlangTypeKind as TypeKind,
-	SlangUUID as UUID,
+	SlangResourceAccess as ResourceAccess, SlangResourceShape as ResourceShape,
+	SlangScalarType as ScalarType, SlangSourceLanguage as SourceLanguage, SlangStage as Stage,
+	SlangTypeKind as TypeKind, SlangUUID as UUID,
 };
 
 macro_rules! vcall {
