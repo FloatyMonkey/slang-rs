@@ -10,6 +10,7 @@ fn compile() {
 	// All compiler options are available through this builder.
 	let session_options = slang::CompilerOptions::default()
 		.optimization(slang::OptimizationLevel::High)
+		.use_vulkan_entry_point_names(true)
 		.matrix_layout_row(true);
 
 	let target_desc = slang::TargetDesc::default()
