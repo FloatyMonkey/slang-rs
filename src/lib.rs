@@ -505,6 +505,12 @@ impl Module {
 		)?)))
 	}
 
+	pub fn entry_points(&self) ->  impl ExactSizeIterator<Item = EntryPoint> {
+		(0..self.entry_point_count())
+			.map(move |i| self.entry_point_by_index(i).unwrap())
+
+	}
+
 	pub fn name(&self) -> &str {
 		let name = vcall!(self, getName());
 		unsafe { CStr::from_ptr(name).to_str().unwrap() }
@@ -518,6 +524,21 @@ impl Module {
 	pub fn unique_identity(&self) -> &str {
 		let identity = vcall!(self, getUniqueIdentity());
 		unsafe { CStr::from_ptr(identity).to_str().unwrap() }
+	}
+
+    pub fn dependency_file_count(&self) -> i32 {
+        vcall!(self, getDependencyFileCount()) as i32
+    }
+
+    pub fn dependency_file_path(&self, index: i32) -> &str {
+        let path = vcall!(self, getDependencyFilePath(index as i32));
+        unsafe { CStr::from_ptr(path).to_str().unwrap() }
+    }
+
+	pub fn dependency_file_paths(&self) ->  impl ExactSizeIterator<Item = &str> {
+		(0..self.dependency_file_count())
+			.map(move |i| self.dependency_file_path(i))
+
 	}
 
 	pub fn module_reflection(&self) -> &reflection::Decl {
