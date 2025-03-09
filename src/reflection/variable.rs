@@ -5,9 +5,9 @@ use slang_sys as sys;
 pub struct Variable(sys::SlangReflectionVariable);
 
 impl Variable {
-	pub fn name(&self) -> Option<&str> {
+	pub fn name(&self) -> &str {
 		let name = rcall!(spReflectionVariable_GetName(self));
-		unsafe { (!name.is_null()).then(|| std::ffi::CStr::from_ptr(name).to_str().unwrap()) }
+		unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() }
 	}
 
 	pub fn ty(&self) -> &Type {
@@ -43,8 +43,8 @@ impl Variable {
 pub struct VariableLayout(sys::SlangReflectionVariableLayout);
 
 impl VariableLayout {
-	pub fn variable(&self) -> &Variable {
-		rcall!(spReflectionVariableLayout_GetVariable(self) as &Variable)
+	pub fn variable(&self) -> Option<&Variable> {
+		rcall!(spReflectionVariableLayout_GetVariable(self) as Option<&Variable>)
 	}
 
 	// TODO: get_name
@@ -70,8 +70,8 @@ impl VariableLayout {
 		rcall!(spReflectionVariableLayout_GetOffset(self, category))
 	}
 
-	pub fn ty(&self) -> &Type {
-		self.variable().ty()
+	pub fn ty(&self) -> Option<&Type> {
+		Some(self.variable()?.ty())
 	}
 
 	pub fn binding_index(&self) -> u32 {
