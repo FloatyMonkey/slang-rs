@@ -750,6 +750,7 @@ impl CompilerOptions {
 	option!(LineDirectiveMode, line_directive_mode(mode: LineDirectiveMode));
 	option!(Optimization, optimization(level: OptimizationLevel));
 	option!(Obfuscate, obfuscate(enable: bool));
+	option!(VulkanUseEntryPointName, vulkan_use_entry_point_name(enable: bool));
 	option!(GLSLForceScalarLayout, glsl_force_scalar_layout(enable: bool));
 	option!(EmitSpirvDirectly, emit_spirv_directly(enable: bool));
 
