@@ -93,7 +93,7 @@ fn result_from_blob(code: sys::SlangResult, blob: *mut sys::slang_IBlob) -> Resu
 		Ok(())
 	}
 }
-
+#[derive(Clone, Copy)]
 pub struct ProfileID(sys::SlangProfileID);
 
 impl ProfileID {
@@ -103,6 +103,7 @@ impl ProfileID {
 	}
 }
 
+#[derive(Clone, Copy)]
 pub struct CapabilityID(sys::SlangCapabilityID);
 
 impl CapabilityID {
