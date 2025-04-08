@@ -11,9 +11,23 @@ fn main() {
 	let headers_dir = if let Ok(dir) = env::var("SLANG_HEADERS_DIR") {
 		dir
 	} else if let Ok(dir) = env::var("SLANG_DIR") {
-		format!("{dir}/include")
+		#[cfg(target_os = "windows")]
+		{
+			format!("{dir}/Include")
+		}
+		#[cfg(not(target_os = "windows"))]
+		{
+			format!("{dir}/include")
+		}
 	} else if let Ok(dir) = env::var("VULKAN_SDK") {
-		format!("{dir}/include/slang")
+		#[cfg(target_os = "windows")]
+		{
+			format!("{dir}/Include/slang")
+		}
+		#[cfg(not(target_os = "windows"))]
+		{
+			format!("{dir}/include/slang")
+		}
 	} else {
 		panic!("The environment variable SLANG_HEADERS_DIR, SLANG_DIR, or VULKAN_SDK must be set");
 	};
@@ -21,9 +35,23 @@ fn main() {
 	let libs_dir = if let Ok(dir) = env::var("SLANG_LIBS_DIR") {
 		dir
 	} else if let Ok(dir) = env::var("SLANG_DIR") {
-		format!("{dir}/lib")
+		#[cfg(target_os = "windows")]
+		{
+			format!("{dir}/Lib")
+		}
+		#[cfg(not(target_os = "windows"))]
+		{
+			format!("{dir}/lib")
+		}
 	} else if let Ok(dir) = env::var("VULKAN_SDK") {
-		format!("{dir}/lib")
+		#[cfg(target_os = "windows")]
+		{
+			format!("{dir}/Lib")
+		}
+		#[cfg(not(target_os = "windows"))]
+		{
+			format!("{dir}/lib")
+		}
 	} else {
 		panic!("The environment variable SLANG_LIBS_DIR, SLANG_DIR, or VULKAN_SDK must be set");
 	};
