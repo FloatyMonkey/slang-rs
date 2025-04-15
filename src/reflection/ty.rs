@@ -1,4 +1,4 @@
-use super::{rcall, UserAttribute, Variable, VariableLayout};
+use super::{UserAttribute, Variable, VariableLayout, rcall};
 use slang_sys as sys;
 
 #[repr(transparent)]
@@ -60,9 +60,9 @@ impl Type {
 		rcall!(spReflectionType_GetResourceAccess(self))
 	}
 
-	pub fn name(&self) -> Option<&str> {
+	pub fn name(&self) -> &str {
 		let name = rcall!(spReflectionType_GetName(self));
-		unsafe { (!name.is_null()).then(|| std::ffi::CStr::from_ptr(name).to_str().unwrap()) }
+		unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() }
 	}
 
 	// TODO: full_name
@@ -92,8 +92,8 @@ impl Type {
 pub struct TypeLayout(sys::SlangReflectionTypeLayout);
 
 impl TypeLayout {
-	pub fn ty(&self) -> &Type {
-		rcall!(spReflectionTypeLayout_GetType(self) as &Type)
+	pub fn ty(&self) -> Option<&Type> {
+		rcall!(spReflectionTypeLayout_GetType(self) as Option<&Type>)
 	}
 
 	pub fn kind(&self) -> sys::SlangTypeKind {
@@ -131,8 +131,8 @@ impl TypeLayout {
 	// TODO: is_array
 	// TODO: unwrap_array
 
-	pub fn element_count(&self) -> usize {
-		self.ty().element_count()
+	pub fn element_count(&self) -> Option<usize> {
+		Some(self.ty()?.element_count())
 	}
 
 	// TODO: total_array_element_count
@@ -170,32 +170,32 @@ impl TypeLayout {
 			.map(move |i| rcall!(spReflectionTypeLayout_GetCategoryByIndex(self, i)))
 	}
 
-	pub fn row_count(&self) -> u32 {
-		self.ty().row_count()
+	pub fn row_count(&self) -> Option<u32> {
+		Some(self.ty()?.row_count())
 	}
 
-	pub fn column_count(&self) -> u32 {
-		self.ty().column_count()
+	pub fn column_count(&self) -> Option<u32> {
+		Some(self.ty()?.column_count())
 	}
 
-	pub fn scalar_type(&self) -> sys::SlangScalarType {
-		self.ty().scalar_type()
+	pub fn scalar_type(&self) -> Option<sys::SlangScalarType> {
+		Some(self.ty()?.scalar_type())
 	}
 
-	pub fn resource_result_type(&self) -> &Type {
-		self.ty().resource_result_type()
+	pub fn resource_result_type(&self) -> Option<&Type> {
+		Some(self.ty()?.resource_result_type())
 	}
 
-	pub fn resource_shape(&self) -> sys::SlangResourceShape {
-		self.ty().resource_shape()
+	pub fn resource_shape(&self) -> Option<sys::SlangResourceShape> {
+		Some(self.ty()?.resource_shape())
 	}
 
-	pub fn resource_access(&self) -> sys::SlangResourceAccess {
-		self.ty().resource_access()
+	pub fn resource_access(&self) -> Option<sys::SlangResourceAccess> {
+		Some(self.ty()?.resource_access())
 	}
 
 	pub fn name(&self) -> Option<&str> {
-		self.ty().name()
+		Some(self.ty()?.name())
 	}
 
 	pub fn matrix_layout_mode(&self) -> sys::SlangMatrixLayoutMode {

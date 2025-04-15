@@ -4,21 +4,20 @@ pub mod reflection;
 mod tests;
 
 use std::ffi::{CStr, CString};
-use std::fmt::Display;
 use std::marker::PhantomData;
 use std::ptr::{null, null_mut};
 
 use slang_sys as sys;
 
 pub use sys::{
-	slang_CompilerOptionName as CompilerOptionName, SlangBindingType as BindingType,
-	SlangCompileTarget as CompileTarget, SlangDebugInfoLevel as DebugInfoLevel,
-	SlangFloatingPointMode as FloatingPointMode, SlangImageFormat as ImageFormat,
-	SlangLineDirectiveMode as LineDirectiveMode, SlangMatrixLayoutMode as MatrixLayoutMode,
-	SlangOptimizationLevel as OptimizationLevel, SlangParameterCategory as ParameterCategory,
+	SlangBindingType as BindingType, SlangCompileTarget as CompileTarget,
+	SlangDebugInfoLevel as DebugInfoLevel, SlangFloatingPointMode as FloatingPointMode,
+	SlangImageFormat as ImageFormat, SlangLineDirectiveMode as LineDirectiveMode,
+	SlangMatrixLayoutMode as MatrixLayoutMode, SlangOptimizationLevel as OptimizationLevel,
+	SlangParameterCategory as ParameterCategory, SlangResourceAccess as ResourceAccess,
 	SlangResourceShape as ResourceShape, SlangScalarType as ScalarType,
 	SlangSourceLanguage as SourceLanguage, SlangStage as Stage, SlangTypeKind as TypeKind,
-	SlangUUID as UUID,
+	SlangUUID as UUID, slang_CompilerOptionName as CompilerOptionName,
 };
 
 macro_rules! vcall {
@@ -41,23 +40,6 @@ pub enum Error {
 	Blob(Blob),
 }
 
-impl Display for Error {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		match self {
-			Self::Code(_) => {
-				write!(f, "unspecified error")
-			}
-			Self::Blob(blob) => {
-				if let Ok(a) = blob.as_str() {
-					write!(f, "{}", a)
-				} else {
-					Ok(())
-				}
-			}
-		}
-	}
-}
-
 impl std::error::Error for Error {
 	fn description(&self) -> &str {
 		"slang error"
@@ -68,13 +50,20 @@ impl std::fmt::Debug for Error {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Error::Code(code) => write!(f, "{}", code),
-			Error::Blob(blob) => write!(f, "{}", blob.as_str().unwrap()),
+			Error::Blob(blob) => write!(f, "{}", blob.as_str().unwrap_or_default()),
 		}
+	}
+}
+
+impl std::fmt::Display for Error {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		std::fmt::Debug::fmt(self, f)
 	}
 }
 
 unsafe impl Send for Error {}
 unsafe impl Sync for Error {}
+impl std::error::Error for Error {}
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -119,12 +108,12 @@ unsafe trait Interface: Sized {
 
 	#[inline(always)]
 	unsafe fn vtable(&self) -> &Self::Vtable {
-		&**(self.as_raw() as *mut *mut Self::Vtable)
+		unsafe { &**(self.as_raw() as *mut *mut Self::Vtable) }
 	}
 
 	#[inline(always)]
 	unsafe fn as_raw<T>(&self) -> *mut T {
-		std::mem::transmute_copy(self)
+		unsafe { std::mem::transmute_copy(self) }
 	}
 
 	fn as_unknown(&self) -> &IUnknown {
@@ -539,6 +528,10 @@ impl Module {
 		)?)))
 	}
 
+	pub fn entry_points(&self) -> impl ExactSizeIterator<Item = EntryPoint> {
+		(0..self.entry_point_count()).map(move |i| self.entry_point_by_index(i).unwrap())
+	}
+
 	pub fn name(&self) -> &str {
 		let name = vcall!(self, getName());
 		unsafe { CStr::from_ptr(name).to_str().unwrap() }
@@ -552,6 +545,19 @@ impl Module {
 	pub fn unique_identity(&self) -> &str {
 		let identity = vcall!(self, getUniqueIdentity());
 		unsafe { CStr::from_ptr(identity).to_str().unwrap() }
+	}
+
+	pub fn dependency_file_count(&self) -> i32 {
+		vcall!(self, getDependencyFileCount()) as i32
+	}
+
+	pub fn dependency_file_path(&self, index: i32) -> &str {
+		let path = vcall!(self, getDependencyFilePath(index as i32));
+		unsafe { CStr::from_ptr(path).to_str().unwrap() }
+	}
+
+	pub fn dependency_file_paths(&self) -> impl ExactSizeIterator<Item = &str> {
+		(0..self.dependency_file_count()).map(move |i| self.dependency_file_path(i))
 	}
 
 	pub fn module_reflection(&self) -> &reflection::Decl {
@@ -767,6 +773,7 @@ impl CompilerOptions {
 	option!(LineDirectiveMode, line_directive_mode(mode: LineDirectiveMode));
 	option!(Optimization, optimization(level: OptimizationLevel));
 	option!(Obfuscate, obfuscate(enable: bool));
+	option!(VulkanUseEntryPointName, vulkan_use_entry_point_name(enable: bool));
 	option!(GLSLForceScalarLayout, glsl_force_scalar_layout(enable: bool));
 	option!(EmitSpirvDirectly, emit_spirv_directly(enable: bool));
 

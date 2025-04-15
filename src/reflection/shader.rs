@@ -1,5 +1,5 @@
 use super::{
-	rcall, EntryPoint, Function, Type, TypeLayout, TypeParameter, Variable, VariableLayout,
+	EntryPoint, Function, Type, TypeLayout, TypeParameter, Variable, VariableLayout, rcall,
 };
 use slang_sys as sys;
 
