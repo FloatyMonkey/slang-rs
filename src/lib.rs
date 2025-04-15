@@ -40,12 +40,6 @@ pub enum Error {
 	Blob(Blob),
 }
 
-impl std::error::Error for Error {
-	fn description(&self) -> &str {
-		"slang error"
-	}
-}
-
 impl std::fmt::Debug for Error {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
