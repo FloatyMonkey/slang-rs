@@ -216,6 +216,11 @@ impl GlobalSession {
 		let name = CString::new(name).unwrap();
 		CapabilityID(vcall!(self, findCapability(name.as_ptr())))
 	}
+
+	pub fn get_build_tag_string(&self) -> &str {
+		let tag = vcall!(self, getBuildTagString());
+		unsafe { CStr::from_ptr(tag).to_str().unwrap() }
+	}
 }
 
 #[repr(transparent)]
