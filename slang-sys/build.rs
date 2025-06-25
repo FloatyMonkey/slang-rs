@@ -4,11 +4,11 @@ use std::env;
 
 fn main() {
 	println!("cargo:rerun-if-env-changed=SLANG_DIR");
-	println!("cargo:rerun-if-env-changed=SLANG_HEADERS_DIR");
-	println!("cargo:rerun-if-env-changed=SLANG_LIBS_DIR");
+	println!("cargo:rerun-if-env-changed=SLANG_INCLUDE_DIR");
+	println!("cargo:rerun-if-env-changed=SLANG_LIB_DIR");
 	println!("cargo:rerun-if-env-changed=VULKAN_SDK");
 
-	let headers_dir = if let Ok(dir) = env::var("SLANG_HEADERS_DIR") {
+	let headers_dir = if let Ok(dir) = env::var("SLANG_INCLUDE_DIR") {
 		dir
 	} else if let Ok(dir) = env::var("SLANG_DIR") {
 		#[cfg(target_os = "windows")]
@@ -29,10 +29,10 @@ fn main() {
 			format!("{dir}/include/slang")
 		}
 	} else {
-		panic!("The environment variable SLANG_HEADERS_DIR, SLANG_DIR, or VULKAN_SDK must be set");
+		panic!("The environment variable SLANG_INCLUDE_DIR, SLANG_DIR, or VULKAN_SDK must be set");
 	};
 	println!("{headers_dir}");
-	let libs_dir = if let Ok(dir) = env::var("SLANG_LIBS_DIR") {
+	let libs_dir = if let Ok(dir) = env::var("SLANG_LIB_DIR") {
 		dir
 	} else if let Ok(dir) = env::var("SLANG_DIR") {
 		#[cfg(target_os = "windows")]
@@ -53,7 +53,7 @@ fn main() {
 			format!("{dir}/lib")
 		}
 	} else {
-		panic!("The environment variable SLANG_LIBS_DIR, SLANG_DIR, or VULKAN_SDK must be set");
+		panic!("The environment variable SLANG_LIB_DIR, SLANG_DIR, or VULKAN_SDK must be set");
 	};
 	if !libs_dir.is_empty() {
 		println!("cargo:rustc-link-search=native={libs_dir}");
