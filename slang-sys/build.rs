@@ -8,7 +8,7 @@ fn main() {
 	println!("cargo:rerun-if-env-changed=SLANG_LIB_DIR");
 	println!("cargo:rerun-if-env-changed=VULKAN_SDK");
 
-	let headers_dir = if let Ok(dir) = env::var("SLANG_INCLUDE_DIR") {
+	let include_dir = if let Ok(dir) = env::var("SLANG_INCLUDE_DIR") {
 		dir
 	} else if let Ok(dir) = env::var("SLANG_DIR") {
 		format!("{dir}/include")
@@ -17,7 +17,6 @@ fn main() {
 	} else {
 		panic!("The environment variable SLANG_INCLUDE_DIR, SLANG_DIR, or VULKAN_SDK must be set");
 	};
-	println!("{headers_dir}");
 	let libs_dir = if let Ok(dir) = env::var("SLANG_LIB_DIR") {
 		dir
 	} else if let Ok(dir) = env::var("SLANG_DIR") {
@@ -27,6 +26,7 @@ fn main() {
 	} else {
 		panic!("The environment variable SLANG_LIB_DIR, SLANG_DIR, or VULKAN_SDK must be set");
 	};
+
 	if !libs_dir.is_empty() {
 		println!("cargo:rustc-link-search=native={libs_dir}");
 	}
@@ -36,7 +36,7 @@ fn main() {
 	println!("cargo:rustc-link-lib=dylib=slang");
 
 	bindgen::builder()
-		.header(format!("{headers_dir}/slang.h").as_str())
+		.header(format!("{include_dir}/slang.h").as_str())
 		.clang_arg("-v")
 		.clang_arg("-xc++")
 		.clang_arg("-std=c++17")
