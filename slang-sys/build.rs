@@ -1,33 +1,42 @@
 extern crate bindgen;
 
 use std::env;
-use std::path::{Path, PathBuf};
 
 fn main() {
 	println!("cargo:rerun-if-env-changed=SLANG_DIR");
+	println!("cargo:rerun-if-env-changed=SLANG_INCLUDE_DIR");
+	println!("cargo:rerun-if-env-changed=SLANG_LIB_DIR");
 	println!("cargo:rerun-if-env-changed=VULKAN_SDK");
 
-	let mut include_file = PathBuf::from("include");
-	let slang_dir = if let Ok(slang_dir) = env::var("SLANG_DIR").map(PathBuf::from) {
-		include_file = include_file.join("slang.h");
-		slang_dir
-	} else if let Ok(vulkan_sdk_dir) = env::var("VULKAN_SDK").map(PathBuf::from) {
-		include_file = include_file.join("slang/slang.h");
-		vulkan_sdk_dir
+	let include_dir = if let Ok(dir) = env::var("SLANG_INCLUDE_DIR") {
+		dir
+	} else if let Ok(dir) = env::var("SLANG_DIR") {
+		format!("{dir}/include")
+	} else if let Ok(dir) = env::var("VULKAN_SDK") {
+		format!("{dir}/include/slang")
 	} else {
-		panic!(
-			"Environment `SLANG_DIR` should be set to the directory of a Slang installation, or `VULKAN_SDK` should be set to the directory of the Vulkan SKD installation."
-		);
+		panic!("The environment variable SLANG_INCLUDE_DIR, SLANG_DIR, or VULKAN_SDK must be set");
+	};
+	let libs_dir = if let Ok(dir) = env::var("SLANG_LIB_DIR") {
+		dir
+	} else if let Ok(dir) = env::var("SLANG_DIR") {
+		format!("{dir}/lib")
+	} else if let Ok(dir) = env::var("VULKAN_SDK") {
+		format!("{dir}/lib")
+	} else {
+		panic!("The environment variable SLANG_LIB_DIR, SLANG_DIR, or VULKAN_SDK must be set");
 	};
 
-	let out_dir = env::var("OUT_DIR")
-		.map(PathBuf::from)
-		.expect("Couldn't determine output directory.");
+	if !libs_dir.is_empty() {
+		println!("cargo:rustc-link-search=native={libs_dir}");
+	}
 
-	link_libraries(&slang_dir);
+	let out_dir = env::var("OUT_DIR").expect("Couldn't determine output directory.");
+
+	println!("cargo:rustc-link-lib=dylib=slang");
 
 	bindgen::builder()
-		.header(slang_dir.join(include_file).to_str().unwrap())
+		.header(format!("{include_dir}/slang.h").as_str())
 		.clang_arg("-v")
 		.clang_arg("-xc++")
 		.clang_arg("-std=c++17")
@@ -52,19 +61,8 @@ fn main() {
 		.derive_copy(true)
 		.generate()
 		.expect("Couldn't generate bindings.")
-		.write_to_file(out_dir.join("bindings.rs"))
+		.write_to_file(format!("{out_dir}/bindings.rs").as_str())
 		.expect("Couldn't write bindings.");
-}
-
-fn link_libraries(slang_dir: &Path) {
-	let lib_dir = slang_dir.join("lib");
-
-	if !lib_dir.is_dir() {
-		panic!("Couldn't find the `lib` subdirectory in the Slang installation directory.")
-	}
-
-	println!("cargo:rustc-link-search=native={}", lib_dir.display());
-	println!("cargo:rustc-link-lib=dylib=slang");
 }
 
 #[derive(Debug)]

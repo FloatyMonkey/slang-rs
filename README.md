@@ -56,6 +56,8 @@ Point this library to a Slang installation. An easy way is by installing the [Lu
 
 Alternatively, download Slang from their [releases page](https://github.com/shader-slang/slang/releases) and manually set the `SLANG_DIR` environment variable to the path of your Slang directory. Copy `slang.dll` to your executable's directory. To compile to DXIL bytecode, also copy `dxil.dll` and `dxcompiler.dll` from the [Microsoft DirectXShaderCompiler](https://github.com/microsoft/DirectXShaderCompiler/releases) to your executable's directory.
 
+To specify the `include` and `lib` directories separately, set the `SLANG_INCLUDE_DIR` and `SLANG_LIB_DIR` environment variables.
+
 ## Credits
 
 Maintained by Lauro Oyen ([@laurooyen](https://github.com/laurooyen)).

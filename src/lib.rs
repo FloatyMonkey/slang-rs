@@ -55,6 +55,8 @@ impl std::fmt::Display for Error {
 	}
 }
 
+unsafe impl Send for Error {}
+unsafe impl Sync for Error {}
 impl std::error::Error for Error {}
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -75,16 +77,26 @@ fn result_from_blob(code: sys::SlangResult, blob: *mut sys::slang_IBlob) -> Resu
 	}
 }
 
+#[derive(Clone, Copy)]
 pub struct ProfileID(sys::SlangProfileID);
 
 impl ProfileID {
 	pub const UNKNOWN: ProfileID = ProfileID(sys::SlangProfileID_SlangProfileUnknown);
+
+	pub fn is_unknown(&self) -> bool {
+		self.0 == sys::SlangProfileID_SlangProfileUnknown
+	}
 }
 
+#[derive(Clone, Copy)]
 pub struct CapabilityID(sys::SlangCapabilityID);
 
 impl CapabilityID {
 	pub const UNKNOWN: CapabilityID = CapabilityID(sys::SlangCapabilityID_SlangCapabilityUnknown);
+
+	pub fn is_unknown(&self) -> bool {
+		self.0 == sys::SlangCapabilityID_SlangCapabilityUnknown
+	}
 }
 
 unsafe trait Interface: Sized {
