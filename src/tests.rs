@@ -13,8 +13,8 @@ fn compile() {
 		.matrix_layout_row(true);
 
 	let target_desc = slang::TargetDesc::default()
-		.format(slang::CompileTarget::Dxil)
-		.profile(global_session.find_profile("sm_6_5"));
+		.format(slang::CompileTarget::Spirv)
+		.profile(global_session.find_profile("glsl_450"));
 
 	let targets = [target_desc];
 	let search_paths = [search_path.as_ptr()];

@@ -1,4 +1,5 @@
 use super::{Function, TypeLayout, VariableLayout, rcall};
+use crate::Stage;
 use slang_sys as sys;
 
 #[repr(transparent)]
@@ -33,7 +34,7 @@ impl EntryPoint {
 		rcall!(spReflectionEntryPoint_getFunction(self) as &Function)
 	}
 
-	pub fn stage(&self) -> sys::SlangStage {
+	pub fn stage(&self) -> Stage {
 		rcall!(spReflectionEntryPoint_getStage(self))
 	}
 
@@ -47,7 +48,14 @@ impl EntryPoint {
 		out_size
 	}
 
-	// TODO: compute_wave_size
+	pub fn compute_wave_size(&self) -> u64 {
+		let mut out_size = 0;
+		rcall!(spReflectionEntryPoint_getComputeWaveSize(
+			self,
+			&mut out_size as *mut u64
+		));
+		out_size
+	}
 
 	pub fn uses_any_sample_rate_input(&self) -> bool {
 		rcall!(spReflectionEntryPoint_usesAnySampleRateInput(self)) != 0

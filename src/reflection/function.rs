@@ -1,4 +1,5 @@
-use super::{Type, UserAttribute, Variable, rcall};
+use super::{Generic, Type, UserAttribute, Variable, rcall};
+use crate::{GlobalSession, Modifier, ModifierID};
 use slang_sys as sys;
 
 #[repr(transparent)]
@@ -40,11 +41,41 @@ impl Function {
 			.map(move |i| rcall!(spReflectionFunction_GetUserAttribute(self, i) as &UserAttribute))
 	}
 
-	// TODO: find_user_attribute_by_name
-	// TODO: find_modifier
-	// TODO: generic_container
-	// TODO: apply_specializations
-	// TODO: specialize_with_arg_types
+	pub fn find_user_attribute_by_name(
+		&self,
+		global_session: &GlobalSession,
+		name: &str,
+	) -> Option<&UserAttribute> {
+		let name = std::ffi::CString::new(name).unwrap();
+		rcall!(spReflectionFunction_FindUserAttributeByName(
+			self,
+			global_session as *const _ as *mut _,
+			name.as_ptr()
+		) as Option<&UserAttribute>)
+	}
+
+	pub fn find_modifier(&self, id: ModifierID) -> Option<&Modifier> {
+		rcall!(spReflectionFunction_FindModifier(self, id) as Option<&Modifier>)
+	}
+
+	pub fn generic_container(&self) -> Option<&Generic> {
+		rcall!(spReflectionFunction_GetGenericContainer(self) as Option<&Generic>)
+	}
+
+	pub fn apply_specializations(&self, generic: &Generic) -> Option<&Function> {
+		rcall!(
+			spReflectionFunction_applySpecializations(self, generic as *const _ as *mut _)
+				as Option<&Function>
+		)
+	}
+
+	pub fn specialize_with_arg_types(&self, types: &[&Type]) -> Option<&Function> {
+		rcall!(spReflectionFunction_specializeWithArgTypes(
+			self,
+			types.len() as i64,
+			types.as_ptr() as *mut _
+		) as Option<&Function>)
+	}
 
 	pub fn is_overloaded(&self) -> bool {
 		rcall!(spReflectionFunction_isOverloaded(self))

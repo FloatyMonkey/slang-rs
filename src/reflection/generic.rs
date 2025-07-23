@@ -1,4 +1,5 @@
 use super::{Decl, Type, TypeParameter, Variable, rcall};
+use crate::DeclKind;
 use slang_sys as sys;
 
 #[repr(transparent)]
@@ -63,7 +64,7 @@ impl Generic {
 		rcall!(spReflectionGeneric_GetInnerDecl(self) as &Decl)
 	}
 
-	pub fn inner_kind(&self) -> sys::SlangDeclKind {
+	pub fn inner_kind(&self) -> DeclKind {
 		rcall!(spReflectionGeneric_GetInnerKind(self))
 	}
 

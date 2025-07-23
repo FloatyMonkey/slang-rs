@@ -1,6 +1,7 @@
 use super::{
-	EntryPoint, Function, Type, TypeLayout, TypeParameter, Variable, VariableLayout, rcall,
+	EntryPoint, Function, Generic, Type, TypeLayout, TypeParameter, Variable, VariableLayout, rcall,
 };
+use crate::{GenericArg, GenericArgType, LayoutRules};
 use slang_sys as sys;
 
 #[repr(transparent)]
@@ -90,16 +91,46 @@ impl Shader {
 		)
 	}
 
-	pub fn type_layout(&self, ty: &Type, rules: sys::SlangLayoutRules) -> Option<&TypeLayout> {
+	pub fn type_layout(&self, ty: &Type, rules: LayoutRules) -> Option<&TypeLayout> {
 		rcall!(
 			spReflection_GetTypeLayout(self, ty as *const _ as *mut _, rules)
 				as Option<&TypeLayout>
 		)
 	}
 
-	// TODO: specialize_type
-	// TODO: specialize_generic
-	// TODO: is_sub_type
+	pub fn specialize_type(&self, ty: &Type, specialization_args: &[&Type]) -> Option<&TypeLayout> {
+		rcall!(spReflection_specializeType(
+			self,
+			ty as *const _ as *mut _,
+			specialization_args.len() as i64,
+			specialization_args.as_ptr() as *mut _,
+			std::ptr::null_mut()
+		) as Option<&TypeLayout>)
+	}
+
+	pub fn specialize_generic(
+		&self,
+		generic: &Generic,
+		specialization_arg_types: &[GenericArgType],
+		specialization_arg_vals: &[GenericArg],
+	) -> Option<&Generic> {
+		rcall!(spReflection_specializeGeneric(
+			self,
+			generic as *const _ as *mut _,
+			specialization_arg_types.len() as i64,
+			specialization_arg_types.as_ptr() as *mut _,
+			specialization_arg_vals.as_ptr() as *mut _,
+			std::ptr::null_mut()
+		) as Option<&Generic>)
+	}
+
+	pub fn is_sub_type(&self, sub_type: &Type, super_type: &Type) -> bool {
+		rcall!(spReflection_isSubType(
+			self,
+			sub_type as *const _ as *mut _,
+			super_type as *const _ as *mut _
+		))
+	}
 
 	pub fn hashed_string_count(&self) -> u64 {
 		rcall!(spReflection_getHashedStringCount(self))
@@ -115,6 +146,10 @@ impl Shader {
 		})
 	}
 
+	pub fn hashed_strings(&self) -> impl ExactSizeIterator<Item = &str> {
+		(0..self.hashed_string_count() as usize).map(|i| self.hashed_string(i as u64).unwrap())
+	}
+
 	pub fn global_params_type_layout(&self) -> &TypeLayout {
 		rcall!(spReflection_getGlobalParamsTypeLayout(self) as &TypeLayout)
 	}
@@ -122,8 +157,4 @@ impl Shader {
 	pub fn global_params_var_layout(&self) -> &VariableLayout {
 		rcall!(spReflection_getGlobalParamsVarLayout(self) as &VariableLayout)
 	}
-}
-
-pub fn compute_string_hash(string: &str) -> u32 {
-	rcall!(spComputeStringHash(string, string.len()))
 }

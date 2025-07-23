@@ -1,4 +1,5 @@
 use super::{Function, Generic, Type, Variable, rcall};
+use crate::DeclKind;
 use slang_sys as sys;
 
 #[repr(transparent)]
@@ -10,7 +11,7 @@ impl Decl {
 		unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() }
 	}
 
-	pub fn kind(&self) -> sys::SlangDeclKind {
+	pub fn kind(&self) -> DeclKind {
 		rcall!(spReflectionDecl_getKind(self))
 	}
 

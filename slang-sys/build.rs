@@ -17,7 +17,8 @@ fn main() {
 	} else {
 		panic!("The environment variable SLANG_INCLUDE_DIR, SLANG_DIR, or VULKAN_SDK must be set");
 	};
-	let libs_dir = if let Ok(dir) = env::var("SLANG_LIB_DIR") {
+
+	let lib_dir = if let Ok(dir) = env::var("SLANG_LIB_DIR") {
 		dir
 	} else if let Ok(dir) = env::var("SLANG_DIR") {
 		format!("{dir}/lib")
@@ -27,13 +28,13 @@ fn main() {
 		panic!("The environment variable SLANG_LIB_DIR, SLANG_DIR, or VULKAN_SDK must be set");
 	};
 
-	if !libs_dir.is_empty() {
-		println!("cargo:rustc-link-search=native={libs_dir}");
+	if !lib_dir.is_empty() {
+		println!("cargo:rustc-link-search=native={lib_dir}");
 	}
 
-	let out_dir = env::var("OUT_DIR").expect("Couldn't determine output directory.");
-
 	println!("cargo:rustc-link-lib=dylib=slang");
+
+	let out_dir = env::var("OUT_DIR").expect("Couldn't determine output directory.");
 
 	bindgen::builder()
 		.header(format!("{include_dir}/slang.h").as_str())

@@ -11,13 +11,16 @@ use slang_sys as sys;
 
 pub use sys::{
 	SlangBindingType as BindingType, SlangCompileTarget as CompileTarget,
-	SlangDebugInfoLevel as DebugInfoLevel, SlangFloatingPointMode as FloatingPointMode,
-	SlangImageFormat as ImageFormat, SlangLineDirectiveMode as LineDirectiveMode,
-	SlangMatrixLayoutMode as MatrixLayoutMode, SlangOptimizationLevel as OptimizationLevel,
-	SlangParameterCategory as ParameterCategory, SlangResourceAccess as ResourceAccess,
-	SlangResourceShape as ResourceShape, SlangScalarType as ScalarType,
-	SlangSourceLanguage as SourceLanguage, SlangStage as Stage, SlangTypeKind as TypeKind,
-	SlangUUID as UUID, slang_CompilerOptionName as CompilerOptionName,
+	SlangDebugInfoLevel as DebugInfoLevel, SlangDeclKind as DeclKind,
+	SlangFloatingPointMode as FloatingPointMode, SlangImageFormat as ImageFormat,
+	SlangLayoutRules as LayoutRules, SlangLineDirectiveMode as LineDirectiveMode,
+	SlangMatrixLayoutMode as MatrixLayoutMode, SlangModifierID as ModifierID,
+	SlangOptimizationLevel as OptimizationLevel, SlangParameterCategory as ParameterCategory,
+	SlangReflectionGenericArg as GenericArg, SlangReflectionGenericArgType as GenericArgType,
+	SlangResourceAccess as ResourceAccess, SlangResourceShape as ResourceShape,
+	SlangScalarType as ScalarType, SlangSourceLanguage as SourceLanguage, SlangStage as Stage,
+	SlangTypeKind as TypeKind, SlangUUID as UUID, slang_CompilerOptionName as CompilerOptionName,
+	slang_Modifier as Modifier,
 };
 
 macro_rules! vcall {
@@ -316,11 +319,11 @@ impl Metadata {
 		register_index: u64,
 	) -> Option<bool> {
 		let mut used = false;
-		let res = vcall!(
+		let result = vcall!(
 			self,
 			isParameterLocationUsed(category, space_index, register_index, &mut used)
 		);
-		succeeded(res).then(|| used)
+		succeeded(result).then(|| used)
 	}
 }
 

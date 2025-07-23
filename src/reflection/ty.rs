@@ -1,11 +1,14 @@
-use super::{UserAttribute, Variable, VariableLayout, rcall};
+use super::{Generic, UserAttribute, Variable, rcall};
+use crate::{
+	Blob, Error, IUnknown, ResourceAccess, ResourceShape, Result, ScalarType, TypeKind, succeeded,
+};
 use slang_sys as sys;
 
 #[repr(transparent)]
 pub struct Type(sys::SlangReflectionType);
 
 impl Type {
-	pub fn kind(&self) -> sys::SlangTypeKind {
+	pub fn kind(&self) -> TypeKind {
 		rcall!(spReflectionType_GetKind(self))
 	}
 
@@ -22,15 +25,34 @@ impl Type {
 			.map(move |i| rcall!(spReflectionType_GetFieldByIndex(self, i) as &Variable))
 	}
 
-	// TODO: is_array
+	pub fn is_array(&self) -> bool {
+		self.kind() == TypeKind::Array
+	}
 
-	// TODO: unwrap_array
+	pub fn unwrap_array(&self) -> &Type {
+		let mut ty = self;
+		while ty.is_array() {
+			ty = ty.element_type();
+		}
+		ty
+	}
+
+	pub fn total_array_element_count(&self) -> usize {
+		if !self.is_array() {
+			return 0;
+		}
+		let mut result = 1;
+		let mut ty = self;
+		while ty.is_array() {
+			result *= ty.element_count();
+			ty = ty.element_type();
+		}
+		result
+	}
 
 	pub fn element_count(&self) -> usize {
 		rcall!(spReflectionType_GetElementCount(self))
 	}
-
-	// TODO: total_array_element_count
 
 	pub fn element_type(&self) -> &Type {
 		rcall!(spReflectionType_GetElementType(self) as &Type)
@@ -44,7 +66,7 @@ impl Type {
 		rcall!(spReflectionType_GetColumnCount(self))
 	}
 
-	pub fn scalar_type(&self) -> sys::SlangScalarType {
+	pub fn scalar_type(&self) -> ScalarType {
 		rcall!(spReflectionType_GetScalarType(self))
 	}
 
@@ -52,11 +74,11 @@ impl Type {
 		rcall!(spReflectionType_GetResourceResultType(self) as &Type)
 	}
 
-	pub fn resource_shape(&self) -> sys::SlangResourceShape {
+	pub fn resource_shape(&self) -> ResourceShape {
 		rcall!(spReflectionType_GetResourceShape(self))
 	}
 
-	pub fn resource_access(&self) -> sys::SlangResourceAccess {
+	pub fn resource_access(&self) -> ResourceAccess {
 		rcall!(spReflectionType_GetResourceAccess(self))
 	}
 
@@ -65,7 +87,18 @@ impl Type {
 		unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() }
 	}
 
-	// TODO: full_name
+	pub fn full_name(&self) -> Result<Blob> {
+		let mut name = std::ptr::null_mut();
+		let result = rcall!(spReflectionType_GetFullName(self, &mut name));
+
+		if succeeded(result) && !name.is_null() {
+			Ok(Blob(IUnknown(
+				std::ptr::NonNull::new(name as *mut _).unwrap(),
+			)))
+		} else {
+			Err(Error::Code(result))
+		}
+	}
 
 	pub fn user_attribute_count(&self) -> u32 {
 		rcall!(spReflectionType_GetUserAttributeCount(self))
@@ -86,291 +119,15 @@ impl Type {
 			spReflectionType_FindUserAttributeByName(self, name.as_ptr()) as Option<&UserAttribute>
 		)
 	}
-}
 
-#[repr(transparent)]
-pub struct TypeLayout(sys::SlangReflectionTypeLayout);
-
-impl TypeLayout {
-	pub fn ty(&self) -> Option<&Type> {
-		rcall!(spReflectionTypeLayout_GetType(self) as Option<&Type>)
+	pub fn generic_container(&self) -> Option<&Generic> {
+		rcall!(spReflectionType_GetGenericContainer(self) as Option<&Generic>)
 	}
 
-	pub fn kind(&self) -> sys::SlangTypeKind {
-		rcall!(spReflectionTypeLayout_getKind(self))
-	}
-
-	pub fn size(&self, category: sys::SlangParameterCategory) -> usize {
-		rcall!(spReflectionTypeLayout_GetSize(self, category))
-	}
-
-	pub fn stride(&self, category: sys::SlangParameterCategory) -> usize {
-		rcall!(spReflectionTypeLayout_GetStride(self, category))
-	}
-
-	pub fn alignment(&self, category: sys::SlangParameterCategory) -> i32 {
-		rcall!(spReflectionTypeLayout_getAlignment(self, category))
-	}
-
-	pub fn field_count(&self) -> u32 {
-		rcall!(spReflectionTypeLayout_GetFieldCount(self))
-	}
-
-	pub fn field_by_index(&self, index: u32) -> Option<&VariableLayout> {
-		rcall!(spReflectionTypeLayout_GetFieldByIndex(self, index) as Option<&VariableLayout>)
-	}
-
-	pub fn fields(&self) -> impl ExactSizeIterator<Item = &VariableLayout> {
-		(0..self.field_count()).map(move |i| {
-			rcall!(spReflectionTypeLayout_GetFieldByIndex(self, i) as &VariableLayout)
-		})
-	}
-
-	// TODO: find_field_index_by_name
-	// TODO: explicit_counter
-	// TODO: is_array
-	// TODO: unwrap_array
-
-	pub fn element_count(&self) -> Option<usize> {
-		Some(self.ty()?.element_count())
-	}
-
-	// TODO: total_array_element_count
-
-	pub fn element_stride(&self, category: sys::SlangParameterCategory) -> usize {
-		rcall!(spReflectionTypeLayout_GetElementStride(self, category))
-	}
-
-	pub fn element_type_layout(&self) -> &TypeLayout {
-		rcall!(spReflectionTypeLayout_GetElementTypeLayout(self) as &TypeLayout)
-	}
-
-	pub fn element_var_layout(&self) -> &VariableLayout {
-		rcall!(spReflectionTypeLayout_GetElementVarLayout(self) as &VariableLayout)
-	}
-
-	pub fn container_var_layout(&self) -> &VariableLayout {
-		rcall!(spReflectionTypeLayout_getContainerVarLayout(self) as &VariableLayout)
-	}
-
-	pub fn parameter_category(&self) -> sys::SlangParameterCategory {
-		rcall!(spReflectionTypeLayout_GetParameterCategory(self))
-	}
-
-	pub fn category_count(&self) -> u32 {
-		rcall!(spReflectionTypeLayout_GetCategoryCount(self))
-	}
-
-	pub fn category_by_index(&self, index: u32) -> sys::SlangParameterCategory {
-		rcall!(spReflectionTypeLayout_GetCategoryByIndex(self, index))
-	}
-
-	pub fn categories(&self) -> impl ExactSizeIterator<Item = sys::SlangParameterCategory> + '_ {
-		(0..self.category_count())
-			.map(move |i| rcall!(spReflectionTypeLayout_GetCategoryByIndex(self, i)))
-	}
-
-	pub fn row_count(&self) -> Option<u32> {
-		Some(self.ty()?.row_count())
-	}
-
-	pub fn column_count(&self) -> Option<u32> {
-		Some(self.ty()?.column_count())
-	}
-
-	pub fn scalar_type(&self) -> Option<sys::SlangScalarType> {
-		Some(self.ty()?.scalar_type())
-	}
-
-	pub fn resource_result_type(&self) -> Option<&Type> {
-		Some(self.ty()?.resource_result_type())
-	}
-
-	pub fn resource_shape(&self) -> Option<sys::SlangResourceShape> {
-		Some(self.ty()?.resource_shape())
-	}
-
-	pub fn resource_access(&self) -> Option<sys::SlangResourceAccess> {
-		Some(self.ty()?.resource_access())
-	}
-
-	pub fn name(&self) -> Option<&str> {
-		Some(self.ty()?.name())
-	}
-
-	pub fn matrix_layout_mode(&self) -> sys::SlangMatrixLayoutMode {
-		rcall!(spReflectionTypeLayout_GetMatrixLayoutMode(self))
-	}
-
-	pub fn generic_param_index(&self) -> i32 {
-		rcall!(spReflectionTypeLayout_getGenericParamIndex(self))
-	}
-
-	pub fn pending_data_type_layout(&self) -> &TypeLayout {
-		rcall!(spReflectionTypeLayout_getPendingDataTypeLayout(self) as &TypeLayout)
-	}
-
-	pub fn specialized_type_pending_data_var_layout(&self) -> &VariableLayout {
+	pub fn apply_specializations(&self, generic: &Generic) -> Option<&Type> {
 		rcall!(
-			spReflectionTypeLayout_getSpecializedTypePendingDataVarLayout(self) as &VariableLayout
-		)
-	}
-
-	pub fn binding_range_count(&self) -> i64 {
-		rcall!(spReflectionTypeLayout_getBindingRangeCount(self))
-	}
-
-	pub fn binding_range_type(&self, index: i64) -> sys::SlangBindingType {
-		rcall!(spReflectionTypeLayout_getBindingRangeType(self, index))
-	}
-
-	pub fn is_binding_range_specializable(&self, index: i64) -> bool {
-		rcall!(spReflectionTypeLayout_isBindingRangeSpecializable(
-			self, index
-		)) != 0
-	}
-
-	pub fn binding_range_binding_count(&self, index: i64) -> i64 {
-		rcall!(spReflectionTypeLayout_getBindingRangeBindingCount(
-			self, index
-		))
-	}
-
-	pub fn field_binding_range_offset(&self, field_index: i64) -> i64 {
-		rcall!(spReflectionTypeLayout_getFieldBindingRangeOffset(
-			self,
-			field_index
-		))
-	}
-
-	pub fn explicit_counter_binding_range_offset(&self) -> i64 {
-		rcall!(spReflectionTypeLayout_getExplicitCounterBindingRangeOffset(
-			self
-		))
-	}
-
-	pub fn binding_range_leaf_type_layout(&self, index: i64) -> &TypeLayout {
-		rcall!(spReflectionTypeLayout_getBindingRangeLeafTypeLayout(self, index) as &TypeLayout)
-	}
-
-	pub fn binding_range_leaf_variable(&self, index: i64) -> &Variable {
-		rcall!(spReflectionTypeLayout_getBindingRangeLeafVariable(self, index) as &Variable)
-	}
-
-	pub fn binding_range_image_format(&self, index: i64) -> sys::SlangImageFormat {
-		rcall!(spReflectionTypeLayout_getBindingRangeImageFormat(
-			self, index
-		))
-	}
-
-	pub fn binding_range_descriptor_set_index(&self, index: i64) -> i64 {
-		rcall!(spReflectionTypeLayout_getBindingRangeDescriptorSetIndex(
-			self, index
-		))
-	}
-
-	pub fn binding_range_first_descriptor_range_index(&self, index: i64) -> i64 {
-		rcall!(spReflectionTypeLayout_getBindingRangeFirstDescriptorRangeIndex(self, index))
-	}
-
-	pub fn binding_range_descriptor_range_count(&self, index: i64) -> i64 {
-		rcall!(spReflectionTypeLayout_getBindingRangeDescriptorRangeCount(
-			self, index
-		))
-	}
-
-	pub fn descriptor_set_count(&self) -> i64 {
-		rcall!(spReflectionTypeLayout_getDescriptorSetCount(self))
-	}
-
-	pub fn descriptor_set_space_offset(&self, set_index: i64) -> i64 {
-		rcall!(spReflectionTypeLayout_getDescriptorSetSpaceOffset(
-			self, set_index
-		))
-	}
-
-	pub fn descriptor_set_descriptor_range_count(&self, set_index: i64) -> i64 {
-		rcall!(spReflectionTypeLayout_getDescriptorSetDescriptorRangeCount(
-			self, set_index
-		))
-	}
-
-	pub fn descriptor_set_descriptor_range_index_offset(
-		&self,
-		set_index: i64,
-		range_index: i64,
-	) -> i64 {
-		rcall!(
-			spReflectionTypeLayout_getDescriptorSetDescriptorRangeIndexOffset(
-				self,
-				set_index,
-				range_index
-			)
-		)
-	}
-
-	pub fn descriptor_set_descriptor_range_descriptor_count(
-		&self,
-		set_index: i64,
-		range_index: i64,
-	) -> i64 {
-		rcall!(
-			spReflectionTypeLayout_getDescriptorSetDescriptorRangeDescriptorCount(
-				self,
-				set_index,
-				range_index
-			)
-		)
-	}
-
-	pub fn descriptor_set_descriptor_range_type(
-		&self,
-		set_index: i64,
-		range_index: i64,
-	) -> sys::SlangBindingType {
-		rcall!(spReflectionTypeLayout_getDescriptorSetDescriptorRangeType(
-			self,
-			set_index,
-			range_index
-		))
-	}
-
-	pub fn descriptor_set_descriptor_range_category(
-		&self,
-		set_index: i64,
-		range_index: i64,
-	) -> sys::SlangParameterCategory {
-		rcall!(
-			spReflectionTypeLayout_getDescriptorSetDescriptorRangeCategory(
-				self,
-				set_index,
-				range_index
-			)
-		)
-	}
-
-	pub fn sub_object_range_count(&self) -> i64 {
-		rcall!(spReflectionTypeLayout_getSubObjectRangeCount(self))
-	}
-
-	pub fn sub_object_range_binding_range_index(&self, sub_object_range_index: i64) -> i64 {
-		rcall!(spReflectionTypeLayout_getSubObjectRangeBindingRangeIndex(
-			self,
-			sub_object_range_index
-		))
-	}
-
-	pub fn sub_object_range_space_offset(&self, sub_object_range_index: i64) -> i64 {
-		rcall!(spReflectionTypeLayout_getSubObjectRangeSpaceOffset(
-			self,
-			sub_object_range_index
-		))
-	}
-
-	pub fn sub_object_range_offset(&self, sub_object_range_index: i64) -> &VariableLayout {
-		rcall!(
-			spReflectionTypeLayout_getSubObjectRangeOffset(self, sub_object_range_index)
-				as &VariableLayout
+			spReflectionType_applySpecializations(self, generic as *const _ as *mut _)
+				as Option<&Type>
 		)
 	}
 }
