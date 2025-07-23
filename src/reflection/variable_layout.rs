@@ -1,6 +1,5 @@
 use super::{Type, TypeLayout, Variable, rcall};
-use crate::{Modifier, ModifierID, ParameterCategory, Stage};
-use slang_sys as sys;
+use crate::{Modifier, ModifierID, ParameterCategory, Stage, sys};
 
 #[repr(transparent)]
 pub struct VariableLayout(sys::SlangReflectionVariableLayout);

@@ -1,6 +1,11 @@
-# Slang Rust Bindings
+<div align="center">
 
-Rust bindings for the [Slang](https://github.com/shader-slang/slang/) shader language. Supporting both the modern compilation and reflection API.
+# shader-slang
+**Rust bindings for the [Slang](https://github.com/shader-slang/slang/) shader language compiler**
+
+</div>
+
+Supports both the modern compilation and reflection API.
 
 Currently mostly reflects the needs of our own [engine](https://github.com/FloatyMonkey/engine) but contributions are more than welcome.
 
@@ -17,8 +22,8 @@ let session_options = slang::CompilerOptions::default()
 	.matrix_layout_row(true);
 
 let target_desc = slang::TargetDesc::default()
-	.format(slang::CompileTarget::Dxil)
-	.profile(global_session.find_profile("sm_6_5"));
+	.format(slang::CompileTarget::Spirv)
+	.profile(global_session.find_profile("glsl_450"));
 
 let targets = [target_desc];
 let search_paths = [search_path.as_ptr()];
@@ -46,11 +51,7 @@ let shader_bytecode = linked_program.entry_point_code(0, 0).unwrap();
 
 ## Installation
 
-Add the following to the `[dependencies]` section of your `Cargo.toml`:
-
-```toml
-slang = { git = "https://github.com/FloatyMonkey/slang-rs.git" }
-```
+Add `shader-slang` to the `[dependencies]` section of your `Cargo.toml`.
 
 Point this library to a Slang installation. An easy way is by installing the [LunarG Vulkan SDK](https://vulkan.lunarg.com) which comes bundled with the Slang compiler. During installation `VULKAN_SDK` is added to the `PATH` and automatically picked up by this library.
 

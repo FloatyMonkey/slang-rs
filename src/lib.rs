@@ -1,3 +1,5 @@
+//! Rust bindings for the Slang shader language compiler
+
 pub mod reflection;
 
 #[cfg(test)]
@@ -7,7 +9,7 @@ use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
 use std::ptr::{null, null_mut};
 
-use slang_sys as sys;
+pub(crate) use shader_slang_sys as sys;
 
 pub use sys::{
 	SlangBindingType as BindingType, SlangCompileTarget as CompileTarget,

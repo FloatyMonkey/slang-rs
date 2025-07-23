@@ -1,8 +1,8 @@
 use super::{Generic, UserAttribute, Variable, rcall};
 use crate::{
 	Blob, Error, IUnknown, ResourceAccess, ResourceShape, Result, ScalarType, TypeKind, succeeded,
+	sys,
 };
-use slang_sys as sys;
 
 #[repr(transparent)]
 pub struct Type(sys::SlangReflectionType);

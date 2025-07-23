@@ -1,6 +1,5 @@
 use super::{Function, TypeLayout, VariableLayout, rcall};
-use crate::Stage;
-use slang_sys as sys;
+use crate::{Stage, sys};
 
 #[repr(transparent)]
 pub struct EntryPoint(sys::SlangReflectionEntryPoint);

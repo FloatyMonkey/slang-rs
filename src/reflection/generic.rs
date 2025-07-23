@@ -1,6 +1,5 @@
 use super::{Decl, Type, TypeParameter, Variable, rcall};
-use crate::DeclKind;
-use slang_sys as sys;
+use crate::{DeclKind, sys};
 
 #[repr(transparent)]
 pub struct Generic(sys::SlangReflectionGeneric);

@@ -1,6 +1,5 @@
 use super::{Generic, Type, UserAttribute, rcall};
-use crate::{GlobalSession, Modifier, ModifierID, succeeded};
-use slang_sys as sys;
+use crate::{GlobalSession, Modifier, ModifierID, succeeded, sys};
 
 #[repr(transparent)]
 pub struct Variable(sys::SlangReflectionVariable);

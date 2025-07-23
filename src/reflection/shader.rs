@@ -1,8 +1,7 @@
 use super::{
 	EntryPoint, Function, Generic, Type, TypeLayout, TypeParameter, Variable, VariableLayout, rcall,
 };
-use crate::{GenericArg, GenericArgType, LayoutRules};
-use slang_sys as sys;
+use crate::{GenericArg, GenericArgType, LayoutRules, sys};
 
 #[repr(transparent)]
 pub struct Shader(sys::SlangReflection);

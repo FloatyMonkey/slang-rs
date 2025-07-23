@@ -1,5 +1,5 @@
 use super::{Type, rcall};
-use slang_sys as sys;
+use crate::sys;
 
 #[repr(transparent)]
 pub struct TypeParameter(sys::SlangReflectionTypeParameter);

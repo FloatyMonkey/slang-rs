@@ -1,9 +1,8 @@
 use super::{Type, Variable, VariableLayout, rcall};
 use crate::{
 	BindingType, ImageFormat, MatrixLayoutMode, ParameterCategory, ResourceAccess, ResourceShape,
-	ScalarType, TypeKind,
+	ScalarType, TypeKind, sys,
 };
-use slang_sys as sys;
 
 #[repr(transparent)]
 pub struct TypeLayout(sys::SlangReflectionTypeLayout);
