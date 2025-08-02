@@ -34,19 +34,19 @@ impl Decl {
 		rcall!(spReflection_getTypeFromDecl(self) as &Type)
 	}
 
-	pub fn as_variable(&self) -> &Variable {
-		rcall!(spReflectionDecl_castToVariable(self) as &Variable)
+	pub fn as_variable(&self) -> Option<&Variable> {
+		rcall!(spReflectionDecl_castToVariable(self) as Option<&Variable>)
 	}
 
-	pub fn as_function(&self) -> &Function {
-		rcall!(spReflectionDecl_castToFunction(self) as &Function)
+	pub fn as_function(&self) -> Option<&Function> {
+		rcall!(spReflectionDecl_castToFunction(self) as Option<&Function>)
 	}
 
-	pub fn as_generic(&self) -> &Generic {
-		rcall!(spReflectionDecl_castToGeneric(self) as &Generic)
+	pub fn as_generic(&self) -> Option<&Generic> {
+		rcall!(spReflectionDecl_castToGeneric(self) as Option<&Generic>)
 	}
 
-	pub fn parent(&self) -> &Decl {
-		rcall!(spReflectionDecl_getParent(self) as &Decl)
+	pub fn parent(&self) -> Option<&Decl> {
+		rcall!(spReflectionDecl_getParent(self) as Option<&Decl>)
 	}
 }
