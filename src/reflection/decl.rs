@@ -5,9 +5,9 @@ use crate::{DeclKind, sys};
 pub struct Decl(sys::SlangReflectionDecl);
 
 impl Decl {
-	pub fn name(&self) -> &str {
+	pub fn name(&self) -> Option<&str> {
 		let name = rcall!(spReflectionDecl_getName(self));
-		unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() }
+		(!name.is_null()).then(|| unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() })
 	}
 
 	pub fn kind(&self) -> DeclKind {
@@ -30,19 +30,19 @@ impl Decl {
 		rcall!(spReflection_getTypeFromDecl(self) as &Type)
 	}
 
-	pub fn as_variable(&self) -> &Variable {
-		rcall!(spReflectionDecl_castToVariable(self) as &Variable)
+	pub fn as_variable(&self) -> Option<&Variable> {
+		rcall!(spReflectionDecl_castToVariable(self) as Option<&Variable>)
 	}
 
-	pub fn as_function(&self) -> &Function {
-		rcall!(spReflectionDecl_castToFunction(self) as &Function)
+	pub fn as_function(&self) -> Option<&Function> {
+		rcall!(spReflectionDecl_castToFunction(self) as Option<&Function>)
 	}
 
-	pub fn as_generic(&self) -> &Generic {
-		rcall!(spReflectionDecl_castToGeneric(self) as &Generic)
+	pub fn as_generic(&self) -> Option<&Generic> {
+		rcall!(spReflectionDecl_castToGeneric(self) as Option<&Generic>)
 	}
 
-	pub fn parent(&self) -> &Decl {
-		rcall!(spReflectionDecl_getParent(self) as &Decl)
+	pub fn parent(&self) -> Option<&Decl> {
+		rcall!(spReflectionDecl_getParent(self) as Option<&Decl>)
 	}
 }
