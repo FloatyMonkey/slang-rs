@@ -7,11 +7,7 @@ pub struct Decl(sys::SlangReflectionDecl);
 impl Decl {
 	pub fn name(&self) -> Option<&str> {
 		let name = rcall!(spReflectionDecl_getName(self));
-		// UnsupportedForReflection returns a null pointer for the name.
-		if name.is_null() {
-			return None;
-		}
-		Some(unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() })
+		(!name.is_null()).then(|| unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() })
 	}
 
 	pub fn kind(&self) -> DeclKind {
