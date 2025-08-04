@@ -273,7 +273,6 @@ impl Session {
 		}
 	}
 
-	/// Load a module from a source string (not a file path).
 	pub fn load_module_from_source_string(&self, module_name: &str, path: &str, source: &str) -> Result<Module> {
 		let module_name = CString::new(module_name).unwrap();
 		let path = CString::new(path).unwrap();
@@ -297,7 +296,6 @@ impl Session {
 		}
 	}
 
-	/// Load a module from an IR blob.
 	pub fn load_module_from_ir_blob(&self, module_name: &str, path: &str, ir_blob: &Blob) -> Result<Module> {
 		let module_name = CString::new(module_name).unwrap();
 		let path = CString::new(path).unwrap();
@@ -309,7 +307,7 @@ impl Session {
 			ir_blob.as_raw(),
 			&mut diagnostics
 		));
-		
+
 		if module.is_null() {
 			let blob = Blob(IUnknown(std::ptr::NonNull::new(diagnostics as *mut _).unwrap()));
 			Err(Error::Blob(blob))
