@@ -273,6 +273,71 @@ impl Session {
 		}
 	}
 
+	pub fn load_module_from_source_string(
+		&self,
+		module_name: &str,
+		path: &str,
+		source: &str,
+	) -> Result<Module> {
+		let module_name = CString::new(module_name).unwrap();
+		let path = CString::new(path).unwrap();
+		let source = CString::new(source).unwrap();
+		let mut diagnostics = null_mut();
+
+		let module = vcall!(
+			self,
+			loadModuleFromSourceString(
+				module_name.as_ptr(),
+				path.as_ptr(),
+				source.as_ptr(),
+				&mut diagnostics
+			)
+		);
+
+		if module.is_null() {
+			let blob = Blob(IUnknown(
+				std::ptr::NonNull::new(diagnostics as *mut _).unwrap(),
+			));
+			Err(Error::Blob(blob))
+		} else {
+			let module = Module(IUnknown(std::ptr::NonNull::new(module as *mut _).unwrap()));
+			unsafe { (module.as_unknown().vtable().ISlangUnknown_addRef)(module.as_raw()) };
+			Ok(module)
+		}
+	}
+
+	pub fn load_module_from_ir_blob(
+		&self,
+		module_name: &str,
+		path: &str,
+		ir_blob: &Blob,
+	) -> Result<Module> {
+		let module_name = CString::new(module_name).unwrap();
+		let path = CString::new(path).unwrap();
+		let mut diagnostics = null_mut();
+
+		let module = vcall!(
+			self,
+			loadModuleFromIRBlob(
+				module_name.as_ptr(),
+				path.as_ptr(),
+				ir_blob.as_raw(),
+				&mut diagnostics
+			)
+		);
+
+		if module.is_null() {
+			let blob = Blob(IUnknown(
+				std::ptr::NonNull::new(diagnostics as *mut _).unwrap(),
+			));
+			Err(Error::Blob(blob))
+		} else {
+			let module = Module(IUnknown(std::ptr::NonNull::new(module as *mut _).unwrap()));
+			unsafe { (module.as_unknown().vtable().ISlangUnknown_addRef)(module.as_raw()) };
+			Ok(module)
+		}
+	}
+
 	pub fn create_composite_component_type(
 		&self,
 		components: &[ComponentType],
