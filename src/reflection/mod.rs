@@ -33,15 +33,18 @@ macro_rules! rcall {
 		unsafe { sys::$f($s as *const _ as *mut _ $(,$arg)*) }
 	};
 
+	($f:ident($s:ident $(,$arg:expr)*) as Option<&str>) => {
+		unsafe {
+			let ptr = sys::$f($s as *const _ as *mut _ $(,$arg)*);
+			(!ptr.is_null()).then(|| std::ffi::CStr::from_ptr(ptr).to_str().ok()).flatten()
+		}
+	};
+
 	($f:ident($s:ident $(,$arg:expr)*) as Option<&$cast:ty>) => {
 		unsafe {
 			let ptr = sys::$f($s as *const _ as *mut _ $(,$arg)*);
 			(!ptr.is_null()).then(|| &*(ptr as *const $cast))
 		}
-	};
-
-	($f:ident($s:ident $(,$arg:expr)*) as &$cast:ty) => {
-		unsafe { &*(sys::$f($s as *const _ as *mut _ $(,$arg)*) as *const $cast) }
 	};
 }
 

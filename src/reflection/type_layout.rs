@@ -37,9 +37,7 @@ impl TypeLayout {
 	}
 
 	pub fn fields(&self) -> impl ExactSizeIterator<Item = &VariableLayout> {
-		(0..self.field_count()).map(move |i| {
-			rcall!(spReflectionTypeLayout_GetFieldByIndex(self, i) as &VariableLayout)
-		})
+		(0..self.field_count()).map(|i| self.field_by_index(i).unwrap())
 	}
 
 	pub fn find_field_index_by_name(&self, name: &str) -> i64 {
@@ -62,7 +60,10 @@ impl TypeLayout {
 	pub fn unwrap_array(&self) -> &TypeLayout {
 		let mut ty = self;
 		while ty.is_array() {
-			ty = ty.element_type_layout();
+			ty = match ty.element_type_layout() {
+				Some(t) => t,
+				None => break,
+			};
 		}
 		ty
 	}
@@ -81,16 +82,16 @@ impl TypeLayout {
 		rcall!(spReflectionTypeLayout_GetElementStride(self, category))
 	}
 
-	pub fn element_type_layout(&self) -> &TypeLayout {
-		rcall!(spReflectionTypeLayout_GetElementTypeLayout(self) as &TypeLayout)
+	pub fn element_type_layout(&self) -> Option<&TypeLayout> {
+		rcall!(spReflectionTypeLayout_GetElementTypeLayout(self) as Option<&TypeLayout>)
 	}
 
-	pub fn element_var_layout(&self) -> &VariableLayout {
-		rcall!(spReflectionTypeLayout_GetElementVarLayout(self) as &VariableLayout)
+	pub fn element_var_layout(&self) -> Option<&VariableLayout> {
+		rcall!(spReflectionTypeLayout_GetElementVarLayout(self) as Option<&VariableLayout>)
 	}
 
-	pub fn container_var_layout(&self) -> &VariableLayout {
-		rcall!(spReflectionTypeLayout_getContainerVarLayout(self) as &VariableLayout)
+	pub fn container_var_layout(&self) -> Option<&VariableLayout> {
+		rcall!(spReflectionTypeLayout_getContainerVarLayout(self) as Option<&VariableLayout>)
 	}
 
 	pub fn parameter_category(&self) -> ParameterCategory {
@@ -106,8 +107,7 @@ impl TypeLayout {
 	}
 
 	pub fn categories(&self) -> impl ExactSizeIterator<Item = ParameterCategory> {
-		(0..self.category_count())
-			.map(move |i| rcall!(spReflectionTypeLayout_GetCategoryByIndex(self, i)))
+		(0..self.category_count()).map(|i| self.category_by_index(i))
 	}
 
 	pub fn row_count(&self) -> Option<u32> {
@@ -123,7 +123,7 @@ impl TypeLayout {
 	}
 
 	pub fn resource_result_type(&self) -> Option<&Type> {
-		Some(self.ty()?.resource_result_type())
+		self.ty()?.resource_result_type()
 	}
 
 	pub fn resource_shape(&self) -> Option<ResourceShape> {
@@ -135,7 +135,7 @@ impl TypeLayout {
 	}
 
 	pub fn name(&self) -> Option<&str> {
-		Some(self.ty()?.name())
+		self.ty()?.name()
 	}
 
 	pub fn matrix_layout_mode(&self) -> MatrixLayoutMode {
@@ -146,13 +146,14 @@ impl TypeLayout {
 		rcall!(spReflectionTypeLayout_getGenericParamIndex(self))
 	}
 
-	pub fn pending_data_type_layout(&self) -> &TypeLayout {
-		rcall!(spReflectionTypeLayout_getPendingDataTypeLayout(self) as &TypeLayout)
+	pub fn pending_data_type_layout(&self) -> Option<&TypeLayout> {
+		rcall!(spReflectionTypeLayout_getPendingDataTypeLayout(self) as Option<&TypeLayout>)
 	}
 
-	pub fn specialized_type_pending_data_var_layout(&self) -> &VariableLayout {
+	pub fn specialized_type_pending_data_var_layout(&self) -> Option<&VariableLayout> {
 		rcall!(
-			spReflectionTypeLayout_getSpecializedTypePendingDataVarLayout(self) as &VariableLayout
+			spReflectionTypeLayout_getSpecializedTypePendingDataVarLayout(self)
+				as Option<&VariableLayout>
 		)
 	}
 
@@ -189,12 +190,15 @@ impl TypeLayout {
 		))
 	}
 
-	pub fn binding_range_leaf_type_layout(&self, index: i64) -> &TypeLayout {
-		rcall!(spReflectionTypeLayout_getBindingRangeLeafTypeLayout(self, index) as &TypeLayout)
+	pub fn binding_range_leaf_type_layout(&self, index: i64) -> Option<&TypeLayout> {
+		rcall!(
+			spReflectionTypeLayout_getBindingRangeLeafTypeLayout(self, index)
+				as Option<&TypeLayout>
+		)
 	}
 
-	pub fn binding_range_leaf_variable(&self, index: i64) -> &Variable {
-		rcall!(spReflectionTypeLayout_getBindingRangeLeafVariable(self, index) as &Variable)
+	pub fn binding_range_leaf_variable(&self, index: i64) -> Option<&Variable> {
+		rcall!(spReflectionTypeLayout_getBindingRangeLeafVariable(self, index) as Option<&Variable>)
 	}
 
 	pub fn binding_range_image_format(&self, index: i64) -> ImageFormat {
@@ -307,10 +311,10 @@ impl TypeLayout {
 		))
 	}
 
-	pub fn sub_object_range_offset(&self, sub_object_range_index: i64) -> &VariableLayout {
+	pub fn sub_object_range_offset(&self, sub_object_range_index: i64) -> Option<&VariableLayout> {
 		rcall!(
 			spReflectionTypeLayout_getSubObjectRangeOffset(self, sub_object_range_index)
-				as &VariableLayout
+				as Option<&VariableLayout>
 		)
 	}
 }

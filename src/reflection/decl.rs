@@ -23,11 +23,11 @@ impl Decl {
 	}
 
 	pub fn children(&self) -> impl ExactSizeIterator<Item = &Decl> {
-		(0..self.child_count()).map(move |i| rcall!(spReflectionDecl_getChild(self, i) as &Decl))
+		(0..self.child_count()).map(|i| self.child_by_index(i).unwrap())
 	}
 
-	pub fn ty(&self) -> &Type {
-		rcall!(spReflection_getTypeFromDecl(self) as &Type)
+	pub fn ty(&self) -> Option<&Type> {
+		rcall!(spReflection_getTypeFromDecl(self) as Option<&Type>)
 	}
 
 	pub fn as_variable(&self) -> Option<&Variable> {

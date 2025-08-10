@@ -5,17 +5,16 @@ use crate::sys;
 pub struct UserAttribute(sys::SlangReflectionUserAttribute);
 
 impl UserAttribute {
-	pub fn name(&self) -> &str {
-		let name = rcall!(spReflectionUserAttribute_GetName(self));
-		unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() }
+	pub fn name(&self) -> Option<&str> {
+		rcall!(spReflectionUserAttribute_GetName(self) as Option<&str>)
 	}
 
 	pub fn argument_count(&self) -> u32 {
 		rcall!(spReflectionUserAttribute_GetArgumentCount(self))
 	}
 
-	pub fn argument_type(&self, index: u32) -> &Type {
-		rcall!(spReflectionUserAttribute_GetArgumentType(self, index) as &Type)
+	pub fn argument_type(&self, index: u32) -> Option<&Type> {
+		rcall!(spReflectionUserAttribute_GetArgumentType(self, index) as Option<&Type>)
 	}
 
 	pub fn argument_value_int(&self, index: u32) -> Option<i32> {

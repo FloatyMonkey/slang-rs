@@ -601,7 +601,7 @@ impl Module {
 	}
 
 	pub fn entry_points(&self) -> impl ExactSizeIterator<Item = EntryPoint> {
-		(0..self.entry_point_count()).map(move |i| self.entry_point_by_index(i).unwrap())
+		(0..self.entry_point_count()).map(|i| self.entry_point_by_index(i).unwrap())
 	}
 
 	pub fn name(&self) -> &str {
@@ -629,7 +629,7 @@ impl Module {
 	}
 
 	pub fn dependency_file_paths(&self) -> impl ExactSizeIterator<Item = &str> {
-		(0..self.dependency_file_count()).map(move |i| self.dependency_file_path(i))
+		(0..self.dependency_file_count()).map(|i| self.dependency_file_path(i))
 	}
 
 	pub fn module_reflection(&self) -> &reflection::Decl {

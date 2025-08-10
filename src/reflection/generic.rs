@@ -5,13 +5,12 @@ use crate::{DeclKind, sys};
 pub struct Generic(sys::SlangReflectionGeneric);
 
 impl Generic {
-	pub fn as_decl(&self) -> &Decl {
-		rcall!(spReflectionGeneric_asDecl(self) as &Decl)
+	pub fn as_decl(&self) -> Option<&Decl> {
+		rcall!(spReflectionGeneric_asDecl(self) as Option<&Decl>)
 	}
 
-	pub fn name(&self) -> &str {
-		let name = rcall!(spReflectionGeneric_GetName(self));
-		unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() }
+	pub fn name(&self) -> Option<&str> {
+		rcall!(spReflectionGeneric_GetName(self) as Option<&str>)
 	}
 
 	pub fn type_parameter_count(&self) -> u32 {
@@ -23,8 +22,7 @@ impl Generic {
 	}
 
 	pub fn type_parameters(&self) -> impl ExactSizeIterator<Item = &TypeParameter> {
-		(0..self.type_parameter_count())
-			.map(move |i| rcall!(spReflectionGeneric_GetTypeParameter(self, i) as &TypeParameter))
+		(0..self.type_parameter_count()).map(|i| self.type_parameter_by_index(i).unwrap())
 	}
 
 	pub fn value_parameter_count(&self) -> u32 {
@@ -36,8 +34,7 @@ impl Generic {
 	}
 
 	pub fn value_parameters(&self) -> impl ExactSizeIterator<Item = &Variable> {
-		(0..self.value_parameter_count())
-			.map(move |i| rcall!(spReflectionGeneric_GetValueParameter(self, i) as &Variable))
+		(0..self.value_parameter_count()).map(|i| self.value_parameter_by_index(i).unwrap())
 	}
 
 	pub fn type_parameter_constraint_count(&self, type_param: &Variable) -> u32 {
@@ -59,20 +56,23 @@ impl Generic {
 		) as Option<&Type>)
 	}
 
-	pub fn inner_decl(&self) -> &Decl {
-		rcall!(spReflectionGeneric_GetInnerDecl(self) as &Decl)
+	pub fn inner_decl(&self) -> Option<&Decl> {
+		rcall!(spReflectionGeneric_GetInnerDecl(self) as Option<&Decl>)
 	}
 
 	pub fn inner_kind(&self) -> DeclKind {
 		rcall!(spReflectionGeneric_GetInnerKind(self))
 	}
 
-	pub fn outer_generic_container(&self) -> &Generic {
-		rcall!(spReflectionGeneric_GetOuterGenericContainer(self) as &Generic)
+	pub fn outer_generic_container(&self) -> Option<&Generic> {
+		rcall!(spReflectionGeneric_GetOuterGenericContainer(self) as Option<&Generic>)
 	}
 
-	pub fn concrete_type(&self, type_param: &Variable) -> &Type {
-		rcall!(spReflectionGeneric_GetConcreteType(self, type_param as *const _ as *mut _) as &Type)
+	pub fn concrete_type(&self, type_param: &Variable) -> Option<&Type> {
+		rcall!(
+			spReflectionGeneric_GetConcreteType(self, type_param as *const _ as *mut _)
+				as Option<&Type>
+		)
 	}
 
 	pub fn concrete_int_val(&self, value_param: &Variable) -> i64 {
@@ -82,10 +82,10 @@ impl Generic {
 		))
 	}
 
-	pub fn apply_specializations(&self, generic: &Generic) -> &Generic {
+	pub fn apply_specializations(&self, generic: &Generic) -> Option<&Generic> {
 		rcall!(
 			spReflectionGeneric_applySpecializations(self, generic as *const _ as *mut _)
-				as &Generic
+				as Option<&Generic>
 		)
 	}
 }

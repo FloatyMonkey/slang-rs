@@ -21,8 +21,7 @@ impl Type {
 	}
 
 	pub fn fields(&self) -> impl ExactSizeIterator<Item = &Variable> {
-		(0..self.field_count())
-			.map(move |i| rcall!(spReflectionType_GetFieldByIndex(self, i) as &Variable))
+		(0..self.field_count()).map(|i| self.field_by_index(i).unwrap())
 	}
 
 	pub fn is_array(&self) -> bool {
@@ -32,7 +31,10 @@ impl Type {
 	pub fn unwrap_array(&self) -> &Type {
 		let mut ty = self;
 		while ty.is_array() {
-			ty = ty.element_type();
+			ty = match ty.element_type() {
+				Some(t) => t,
+				None => break,
+			};
 		}
 		ty
 	}
@@ -42,10 +44,13 @@ impl Type {
 			return 0;
 		}
 		let mut result = 1;
-		let mut ty = self;
-		while ty.is_array() {
-			result *= ty.element_count();
-			ty = ty.element_type();
+		let mut ty = Some(self);
+		while let Some(t) = ty {
+			if !t.is_array() {
+				break;
+			}
+			result *= t.element_count();
+			ty = t.element_type();
 		}
 		result
 	}
@@ -54,8 +59,8 @@ impl Type {
 		rcall!(spReflectionType_GetElementCount(self))
 	}
 
-	pub fn element_type(&self) -> &Type {
-		rcall!(spReflectionType_GetElementType(self) as &Type)
+	pub fn element_type(&self) -> Option<&Type> {
+		rcall!(spReflectionType_GetElementType(self) as Option<&Type>)
 	}
 
 	pub fn row_count(&self) -> u32 {
@@ -70,8 +75,8 @@ impl Type {
 		rcall!(spReflectionType_GetScalarType(self))
 	}
 
-	pub fn resource_result_type(&self) -> &Type {
-		rcall!(spReflectionType_GetResourceResultType(self) as &Type)
+	pub fn resource_result_type(&self) -> Option<&Type> {
+		rcall!(spReflectionType_GetResourceResultType(self) as Option<&Type>)
 	}
 
 	pub fn resource_shape(&self) -> ResourceShape {
@@ -82,9 +87,8 @@ impl Type {
 		rcall!(spReflectionType_GetResourceAccess(self))
 	}
 
-	pub fn name(&self) -> &str {
-		let name = rcall!(spReflectionType_GetName(self));
-		unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() }
+	pub fn name(&self) -> Option<&str> {
+		rcall!(spReflectionType_GetName(self) as Option<&str>)
 	}
 
 	pub fn full_name(&self) -> Result<Blob> {
@@ -109,8 +113,7 @@ impl Type {
 	}
 
 	pub fn user_attributes(&self) -> impl ExactSizeIterator<Item = &UserAttribute> {
-		(0..self.user_attribute_count())
-			.map(move |i| rcall!(spReflectionType_GetUserAttribute(self, i) as &UserAttribute))
+		(0..self.user_attribute_count()).map(|i| self.user_attribute_by_index(i).unwrap())
 	}
 
 	pub fn find_user_attribute_by_name(&self, name: &str) -> Option<&UserAttribute> {

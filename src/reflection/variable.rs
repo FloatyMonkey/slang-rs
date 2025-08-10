@@ -5,13 +5,12 @@ use crate::{GlobalSession, Modifier, ModifierID, succeeded, sys};
 pub struct Variable(sys::SlangReflectionVariable);
 
 impl Variable {
-	pub fn name(&self) -> &str {
-		let name = rcall!(spReflectionVariable_GetName(self));
-		unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() }
+	pub fn name(&self) -> Option<&str> {
+		rcall!(spReflectionVariable_GetName(self) as Option<&str>)
 	}
 
-	pub fn ty(&self) -> &Type {
-		rcall!(spReflectionVariable_GetType(self) as &Type)
+	pub fn ty(&self) -> Option<&Type> {
+		rcall!(spReflectionVariable_GetType(self) as Option<&Type>)
 	}
 
 	pub fn find_modifier(&self, id: ModifierID) -> Option<&Modifier> {
@@ -27,8 +26,7 @@ impl Variable {
 	}
 
 	pub fn user_attributes(&self) -> impl ExactSizeIterator<Item = &UserAttribute> {
-		(0..self.user_attribute_count())
-			.map(move |i| rcall!(spReflectionVariable_GetUserAttribute(self, i) as &UserAttribute))
+		(0..self.user_attribute_count()).map(|i| self.user_attribute_by_index(i).unwrap())
 	}
 
 	pub fn find_user_attribute_by_name(
