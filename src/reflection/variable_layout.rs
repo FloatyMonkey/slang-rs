@@ -1,5 +1,5 @@
 use super::{Type, TypeLayout, Variable, rcall};
-use crate::{Modifier, ModifierID, ParameterCategory, Stage, sys};
+use crate::{Modifier, ModifierID, ParameterCategory, Stage, sys::{self as sys, SlangImageFormat}};
 
 #[repr(transparent)]
 pub struct VariableLayout(sys::SlangReflectionVariableLayout);
@@ -55,6 +55,10 @@ impl VariableLayout {
 
 	pub fn binding_space_with_category(&self, category: ParameterCategory) -> usize {
 		rcall!(spReflectionVariableLayout_GetSpace(self, category))
+	}
+
+	pub fn image_format(&self) -> SlangImageFormat {
+		rcall!(spReflectionVariableLayout_GetImageFormat(self))
 	}
 
 	pub fn semantic_name(&self) -> Option<&str> {
