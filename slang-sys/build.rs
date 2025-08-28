@@ -92,7 +92,7 @@ impl bindgen::callbacks::ParseCallbacks for ParseCallback {
 
 	#[cfg(feature = "serde")]
 	fn add_derives(&self, info: &bindgen::callbacks::DeriveInfo<'_>) -> Vec<String> {
-		if info.name.starts_with("Slang") && info.kind != bindgen::callbacks::TypeKind::Union {
+		if info.name.starts_with("Slang") && info.kind == bindgen::callbacks::TypeKind::Enum {
 			return vec!["serde::Serialize".into(), "serde::Deserialize".into()];
 		}
 		vec![]
