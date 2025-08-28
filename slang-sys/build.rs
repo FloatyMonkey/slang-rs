@@ -89,6 +89,14 @@ impl bindgen::callbacks::ParseCallbacks for ParseCallback {
 		let new_variant_name = new_variant_name.trim_start_matches(trim);
 		Some(new_variant_name.to_string())
 	}
+
+	#[cfg(feature = "serde")]
+	fn add_derives(&self, info: &bindgen::callbacks::DeriveInfo<'_>) -> Vec<String> {
+		if info.name.starts_with("Slang") && info.kind == bindgen::callbacks::TypeKind::Enum {
+			return vec!["serde::Serialize".into(), "serde::Deserialize".into()];
+		}
+		vec![]
+	}
 }
 
 /// Converts `snake_case` or `SNAKE_CASE` to `PascalCase`.
