@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 categories = ["compilers", "external-ffi-bindings"]
 
 [dependencies]
-serde = { version = "1", features = ["derive"], optional = true}
+serde = { version = "1", features = ["derive"], optional = true }
 
 [build-dependencies]
 bindgen = "0.72.0"
