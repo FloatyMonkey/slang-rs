@@ -14,6 +14,4 @@ shader-slang-sys = { path = "slang-sys", version = "0.1.0" }
 serde = ["shader-slang-sys/serde"]
 
 [workspace]
-members = [
-	"slang-sys"
-]
+members = ["slang-sys"]
