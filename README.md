@@ -55,9 +55,20 @@ Add `shader-slang` to the `[dependencies]` section of your `Cargo.toml`.
 
 Point this library to a Slang installation. An easy way is by installing the [LunarG Vulkan SDK](https://vulkan.lunarg.com) which comes bundled with the Slang compiler. During installation `VULKAN_SDK` is added to the `PATH` and automatically picked up by this library.
 
-Alternatively, download Slang from their [releases page](https://github.com/shader-slang/slang/releases) and manually set the `SLANG_DIR` environment variable to the path of your Slang directory. Copy `slang.dll` to your executable's directory. To compile to DXIL bytecode, also copy `dxil.dll` and `dxcompiler.dll` from the [Microsoft DirectXShaderCompiler](https://github.com/microsoft/DirectXShaderCompiler/releases) to your executable's directory.
+Alternatively, download Slang from their [releases page](https://github.com/shader-slang/slang/releases) and manually set the `SLANG_DIR` environment variable to the path of your Slang directory.
 
 To specify the `include` and `lib` directories separately, set the `SLANG_INCLUDE_DIR` and `SLANG_LIB_DIR` environment variables.
+
+### Dynamic linking
+
+Using feature `dynamic` will dynamically link slang and its dependencies: Copy `slang.dll` to your executable's directory. To compile to DXIL bytecode, also copy `dxil.dll` and `dxcompiler.dll` from the [Microsoft DirectXShaderCompiler](https://github.com/microsoft/DirectXShaderCompiler/releases) to your executable's directory.
+
+### Static linking
+
+Use the `static` feature to link statically slang and its dependencies. When compiling, you'll need these additional environment variables:
+
+- `SLANG_EXTERNAL_DIR`: typically set to '[<slang_source_directory>](https://github.com/shader-slang/slang)/build/external'
+- `LIBSTDCPP_PATH`: to link with libstdc++.
 
 ## Credits
 
