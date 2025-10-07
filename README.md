@@ -65,10 +65,9 @@ Using feature `dynamic` will dynamically link slang and its dependencies: Copy `
 
 ### Static linking
 
-Use the `static` feature to link statically slang and its dependencies. When compiling, you'll need these additional environment variables:
+Use the `static` feature to link statically slang and its dependencies. When compiling, you'll need this additional environment variable:
 
 - `SLANG_EXTERNAL_DIR`: typically set to '[<slang_source_directory>](https://github.com/shader-slang/slang)/build/external'
-- `LIBSTDCPP_PATH`: to link with libstdc++.
 
 ## Credits
 
