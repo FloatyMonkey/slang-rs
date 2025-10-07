@@ -81,6 +81,9 @@ fn main() {
 		} else if cfg!(target_os = "linux") {
 			// Linux often uses GCC or Clang with libstdc++ as the default C++ standard library, and libc++ is not commonly installed.
 			println!("cargo:rustc-link-lib=stdc++"); // Links libstdc++ on Linux
+		} else {
+			// Fallback
+			println!("cargo:rustc-link-lib=stdc++");
 		}
 	}
 
