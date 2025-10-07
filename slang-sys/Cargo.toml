@@ -14,7 +14,7 @@ serde = { version = "1", features = ["derive"], optional = true }
 bindgen = "0.72.0"
 
 [features]
-default = ["static"]
+default = ["dynamic"]
 dynamic = []
 static = []
 serde = ["dep:serde"]
