@@ -64,8 +64,8 @@ fn main() {
 		// External slang dependencies
 		println!("cargo:rustc-link-lib=static=miniz");
 		println!("cargo:rustc-link-lib=static=lz4");
-		// Standard C++ library
-		println!("cargo:rustc-link-lib=stdc++");
+		// C++ library
+		println!("cargo:rustc-link-lib=c++");
 	}
 
 	let out_dir = env::var("OUT_DIR").expect("Couldn't determine output directory.");
