@@ -65,7 +65,23 @@ fn main() {
 		println!("cargo:rustc-link-lib=static=miniz");
 		println!("cargo:rustc-link-lib=static=lz4");
 		// C++ library
-		println!("cargo:rustc-link-lib=c++");
+		// The C++ lib has to be the same as the one used to compile Slang,
+		// otherwise you will get errors about missing symbols.
+		// The following is only a best guess depending on platform's defaults.
+		if cfg!(target_os = "windows") {
+			if cfg!(not(target_env = "msvc")) {
+				// MinGW: Link libstdc++
+				println!("cargo:rustc-link-lib=stdc++");
+			} else {
+				// No linking necessary on Windows, the MSVC runtime is linked by default.
+			}
+		} else if cfg!(target_os = "macos") {
+			// macOS uses Apple’s Clang/LLVM by default, which is tightly integrated with libc++.
+			println!("cargo:rustc-link-lib=c++"); // Links libc++ on macOS
+		} else if cfg!(target_os = "linux") {
+			// Linux often uses GCC or Clang with libstdc++ as the default C++ standard library, and libc++ is not commonly installed.
+			println!("cargo:rustc-link-lib=stdc++"); // Links libstdc++ on Linux
+		}
 	}
 
 	let out_dir = env::var("OUT_DIR").expect("Couldn't determine output directory.");
