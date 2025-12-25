@@ -126,7 +126,7 @@ impl FileSystemForeignAdapter {
 
         match fs.user.load_file(path) {
             Some(blob) => {
-                unsafe { *out_blob = blob.as_raw() };
+                unsafe { out_blob.write(blob.as_raw()); }
                 
                 // SAFETY: The this blob's ownership is transferred from Rust to C++.
                 //
