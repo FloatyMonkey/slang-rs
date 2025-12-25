@@ -10,26 +10,6 @@ use crate::{IUnknown, Interface};
 #[derive(Clone)]
 pub struct FileSystem(IUnknown);
 
-impl FileSystem {
-    /// Loads a file from the file system.
-    pub fn load_file(&self, path: &str) -> Result<Blob> {
-        let path = std::ffi::CString::new(path).unwrap();
-
-        let mut blob = MaybeUninit::<*mut sys::ISlangBlob>::uninit();
-        let code = vcall!(self, loadFile(path.as_ptr(), blob.as_mut_ptr()));
-
-        if succeeded(code) {
-            // SAFETY: The blob is initialized by the call to loadFile.
-            let blob = unsafe { blob.assume_init() };
-            let blob = NonNull::new(blob).unwrap();
-
-            Ok(Blob(IUnknown(unsafe { std::mem::transmute(blob) })))
-        } else {
-            Err(Error::Code(code))
-        }
-    }
-}
-
 unsafe impl Interface for FileSystem {
 	type Vtable = sys::IFileSystemVtable;
 	const IID: UUID = uuid(0x8f241361_f5bd_4ca0_a3ac02f7fa2402b8);
@@ -62,7 +42,7 @@ impl FileSystemForeignAdapter {
 	    loadFile: Self::load_file,
     };
 
-    pub(crate) fn new(fs: Box<dyn FileSystemTrait>) -> *mut sys::ISlangFileSystem {
+    pub fn new(fs: Box<dyn FileSystemTrait>) -> *mut sys::ISlangFileSystem {
         let adapter = Box::new(FileSystemForeignAdapter {
             _vtable: &Self::VTABLE,
             ref_count: AtomicU32::new(1),
