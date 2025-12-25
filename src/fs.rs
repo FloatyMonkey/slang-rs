@@ -53,13 +53,13 @@ impl FileSystemForeignAdapter {
     const VTABLE: sys::IFileSystemVtable = sys::IFileSystemVtable {
         _base: ICastableVtable{
             _base: ISlangUnknown__bindgen_vtable{
-                ISlangUnknown_queryInterface: FileSystemForeignAdapter::query_interface_trampoline,
-                ISlangUnknown_addRef: FileSystemForeignAdapter::add_ref_trampoline,
-                ISlangUnknown_release: FileSystemForeignAdapter::release_trampoline,
+                ISlangUnknown_queryInterface: Self::query_interface,
+                ISlangUnknown_addRef: Self::add_ref,
+                ISlangUnknown_release: Self::release,
             },
-            castAs: FileSystemForeignAdapter::cast_as_trampoline,
+            castAs: Self::cast_as,
         },
-	    loadFile: FileSystemForeignAdapter::load_file_trampoline,
+	    loadFile: Self::load_file,
     };
 
     pub(crate) fn new(fs: Box<dyn FileSystemTrait>) -> *mut sys::ISlangFileSystem {
@@ -74,28 +74,31 @@ impl FileSystemForeignAdapter {
         unsafe { std::mem::transmute(ptr) }
     }
 
-    unsafe extern "C" fn query_interface_trampoline(this: *mut sys::ISlangUnknown, guid: *const sys::SlangUUID, out_interface: *mut *mut std::ffi::c_void) -> SlangResult {
-        let casted = unsafe { Self::cast_as_trampoline(this as *mut _, guid) };
+    unsafe extern "C" fn query_interface(this: *mut sys::ISlangUnknown, guid: *const sys::SlangUUID, out_interface: *mut *mut std::ffi::c_void) -> SlangResult {
+        let casted = unsafe { Self::cast_as(this as *mut _, guid) };
         if casted.is_null() {
             return -1;
         }
 
-        unsafe { Self::add_ref_trampoline(casted as *mut _) };
-        unsafe { *out_interface = casted };
+        unsafe { 
+            Self::add_ref(casted as *mut _) ;
+            out_interface.write(casted);
+        };
+
         0
     }
 
-    unsafe extern "C" fn add_ref_trampoline(this: *mut sys::ISlangUnknown) -> u32 {
-        let fs: &FileSystemForeignAdapter = unsafe { std::mem::transmute(this) };
+    unsafe extern "C" fn add_ref(this: *mut sys::ISlangUnknown) -> u32 {
+        let fs: &Self = unsafe { std::mem::transmute(this) };
         fs.ref_count.fetch_add(1, Ordering::Acquire) + 1
     }
 
-    unsafe extern "C" fn release_trampoline(this: *mut sys::ISlangUnknown) -> u32 {
-        let fs: &FileSystemForeignAdapter = unsafe { std::mem::transmute(this) };
+    unsafe extern "C" fn release(this: *mut sys::ISlangUnknown) -> u32 {
+        let fs: &Self = unsafe { std::mem::transmute(this) };
         let count = fs.ref_count.fetch_sub(1, Ordering::Release) - 1;
         if count == 0 {
             // Drop the adapter
-            let ptr = this.cast::<FileSystemForeignAdapter>();
+            let ptr = this.cast::<Self>();
             
             // SAFETY: this pointer was created in 
             let _ = unsafe { Box::from_raw(ptr) };
@@ -104,7 +107,7 @@ impl FileSystemForeignAdapter {
         count
     }
 
-    unsafe extern "C" fn cast_as_trampoline(this: *mut std::ffi::c_void, guid: *const sys::SlangUUID) -> *mut std::ffi::c_void {
+    unsafe extern "C" fn cast_as(this: *mut std::ffi::c_void, guid: *const sys::SlangUUID) -> *mut std::ffi::c_void {
         if guid.is_null() {
             return std::ptr::null_mut();
         }
@@ -117,8 +120,8 @@ impl FileSystemForeignAdapter {
         }
     }
 
-    unsafe extern "C" fn load_file_trampoline(this: *mut std::ffi::c_void, path: *const i8, out_blob: *mut *mut sys::ISlangBlob) -> SlangResult {
-        let fs: &FileSystemForeignAdapter = unsafe { std::mem::transmute(this) };
+    unsafe extern "C" fn load_file(this: *mut std::ffi::c_void, path: *const i8, out_blob: *mut *mut sys::ISlangBlob) -> SlangResult {
+        let fs: &Self = unsafe { std::mem::transmute(this) };
         let path = unsafe { std::ffi::CStr::from_ptr(path).to_str().unwrap() };
 
         match fs.user.load_file(path) {
