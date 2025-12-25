@@ -1,10 +1,6 @@
-use std::{
-	mem::MaybeUninit,
-	ptr::NonNull,
-	sync::atomic::{AtomicU32, Ordering},
-};
+use std::sync::atomic::{AtomicU32, Ordering};
 
-use crate::{Blob, Error, Result, result_from_blob, succeeded, uuid, uuid_eq, vcall};
+use crate::{Blob, uuid, uuid_eq};
 pub(crate) use shader_slang_sys as sys;
 use shader_slang_sys::{
 	ICastableVtable, ISlangUnknown__bindgen_vtable, SlangResult, SlangUUID as UUID,

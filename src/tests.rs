@@ -1,6 +1,6 @@
 use crate as slang;
 use crate::fs::FileSystemTrait;
-use crate::{Blob, IUnknown, Interface};
+use crate::Blob;
 use std::collections::HashMap;
 
 #[test]
