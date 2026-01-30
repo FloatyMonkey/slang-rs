@@ -1,5 +1,5 @@
 use super::{Generic, Type, UserAttribute, rcall};
-use crate::{GlobalSession, Modifier, ModifierID, succeeded, sys};
+use crate::{GlobalSession, Interface, Modifier, ModifierID, succeeded, sys};
 
 #[repr(transparent)]
 pub struct Variable(sys::SlangReflectionVariable);
@@ -37,7 +37,7 @@ impl Variable {
 		let name = std::ffi::CString::new(name).unwrap();
 		rcall!(spReflectionVariable_FindUserAttributeByName(
 			self,
-			global_session as *const _ as *mut _,
+			global_session.as_raw(),
 			name.as_ptr()
 		) as Option<&UserAttribute>)
 	}
