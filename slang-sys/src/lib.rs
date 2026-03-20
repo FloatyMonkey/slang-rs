@@ -137,3 +137,9 @@ pub struct IModuleVtable {
 	pub getDependencyFilePath: unsafe extern "C" fn(*mut c_void, index: SlangInt32) -> *const c_char,
 	pub getModuleReflection: unsafe extern "C" fn(*mut c_void) -> *mut slang_DeclReflection,
 }
+
+#[repr(C)]
+pub struct IFileSystemVtable {
+	pub _base: ICastableVtable,
+	pub loadFile: unsafe extern "C" fn(*mut c_void, path: *const c_char, outBlob: *mut *mut ISlangBlob) -> SlangResult,
+}
