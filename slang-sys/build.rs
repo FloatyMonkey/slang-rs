@@ -1,22 +1,9 @@
-extern crate bindgen;
-
 use std::env;
 
 fn main() {
 	println!("cargo:rerun-if-env-changed=SLANG_DIR");
-	println!("cargo:rerun-if-env-changed=SLANG_INCLUDE_DIR");
 	println!("cargo:rerun-if-env-changed=SLANG_LIB_DIR");
 	println!("cargo:rerun-if-env-changed=VULKAN_SDK");
-
-	let include_dir = if let Ok(dir) = env::var("SLANG_INCLUDE_DIR") {
-		dir
-	} else if let Ok(dir) = env::var("SLANG_DIR") {
-		format!("{dir}/include")
-	} else if let Ok(dir) = env::var("VULKAN_SDK") {
-		format!("{dir}/include/slang")
-	} else {
-		panic!("The environment variable SLANG_INCLUDE_DIR, SLANG_DIR, or VULKAN_SDK must be set");
-	};
 
 	let lib_dir = if let Ok(dir) = env::var("SLANG_LIB_DIR") {
 		dir
@@ -34,9 +21,25 @@ fn main() {
 
 	println!("cargo:rustc-link-lib=dylib=slang");
 
-	let out_dir = env::var("OUT_DIR").expect("Couldn't determine output directory.");
+	#[cfg(feature = "bindgen")]
+	generate_bindings();
+}
 
-	bindgen::builder()
+#[cfg(feature = "bindgen")]
+fn generate_bindings() {
+	println!("cargo:rerun-if-env-changed=SLANG_INCLUDE_DIR");
+
+	let include_dir = if let Ok(dir) = env::var("SLANG_INCLUDE_DIR") {
+		dir
+	} else if let Ok(dir) = env::var("SLANG_DIR") {
+		format!("{dir}/include")
+	} else if let Ok(dir) = env::var("VULKAN_SDK") {
+		format!("{dir}/include/slang")
+	} else {
+		panic!("The environment variable SLANG_INCLUDE_DIR, SLANG_DIR, or VULKAN_SDK must be set");
+	};
+
+	let bindings = bindgen::builder()
 		.header(format!("{include_dir}/slang.h").as_str())
 		.clang_arg("-v")
 		.clang_arg("-xc++")
@@ -61,14 +64,19 @@ fn main() {
 		.layout_tests(false)
 		.derive_copy(true)
 		.generate()
-		.expect("Couldn't generate bindings.")
-		.write_to_file(format!("{out_dir}/bindings.rs").as_str())
-		.expect("Couldn't write bindings.");
+		.expect("Couldn't generate bindings.");
+
+	let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+	bindings
+		.write_to_file(format!("{manifest_dir}/src/bindings.rs"))
+		.expect("Couldn't write bindings to source tree.");
 }
 
+#[cfg(feature = "bindgen")]
 #[derive(Debug)]
 struct ParseCallback {}
 
+#[cfg(feature = "bindgen")]
 impl bindgen::callbacks::ParseCallbacks for ParseCallback {
 	fn enum_variant_name(
 		&self,
@@ -90,10 +98,12 @@ impl bindgen::callbacks::ParseCallbacks for ParseCallback {
 		Some(new_variant_name.to_string())
 	}
 
-	#[cfg(feature = "serde")]
-	fn add_derives(&self, info: &bindgen::callbacks::DeriveInfo<'_>) -> Vec<String> {
+	fn add_attributes(&self, info: &bindgen::callbacks::AttributeInfo<'_>) -> Vec<String> {
 		if info.name.starts_with("Slang") && info.kind == bindgen::callbacks::TypeKind::Enum {
-			return vec!["serde::Serialize".into(), "serde::Deserialize".into()];
+			return vec![
+				"#[cfg_attr(feature = \"serde\", derive(serde::Serialize, serde::Deserialize))]"
+					.into(),
+			];
 		}
 		vec![]
 	}
@@ -101,6 +111,7 @@ impl bindgen::callbacks::ParseCallbacks for ParseCallback {
 
 /// Converts `snake_case` or `SNAKE_CASE` to `PascalCase`.
 /// If the input is already in `PascalCase` it will be returned as is.
+#[cfg(feature = "bindgen")]
 fn pascal_case_from_snake_case(snake_case: &str) -> String {
 	let mut result = String::new();
 
