@@ -12,7 +12,13 @@ fn main() {
 	} else if let Ok(dir) = env::var("VULKAN_SDK") {
 		format!("{dir}/lib")
 	} else {
-		panic!("The environment variable SLANG_LIB_DIR, SLANG_DIR, or VULKAN_SDK must be set");
+		println!(
+			"cargo::warning=Did not find environment variable SLANG_LIB_DIR, SLANG_DIR, or VULKAN_SDK."
+		);
+		println!(
+			"cargo::warning=These directories will not be included in the linker search path for shader_slang."
+		);
+		"".to_string()
 	};
 
 	if !lib_dir.is_empty() {
@@ -36,7 +42,11 @@ fn generate_bindings() {
 	} else if let Ok(dir) = env::var("VULKAN_SDK") {
 		format!("{dir}/include/slang")
 	} else {
-		panic!("The environment variable SLANG_INCLUDE_DIR, SLANG_DIR, or VULKAN_SDK must be set");
+		println!(
+			"cargo::warning=Did not find environment variable SLANG_LIB_DIR, SLANG_DIR, or VULKAN_SDK, but the bindgen feature was enabled."
+		);
+		println!("cargo::warning=shader-slang will not regenerate bindings.");
+		return;
 	};
 
 	let bindings = bindgen::builder()
