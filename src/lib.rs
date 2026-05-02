@@ -5,7 +5,7 @@ pub mod reflection;
 #[cfg(test)]
 mod tests;
 
-use std::ffi::{CStr, CString};
+use std::ffi::{CStr, CString, c_char};
 use std::marker::PhantomData;
 use std::ptr::{null, null_mut};
 
@@ -670,7 +670,7 @@ impl<'a> SessionDesc<'a> {
 		self
 	}
 
-	pub fn search_paths(mut self, paths: &'a [*const i8]) -> Self {
+	pub fn search_paths(mut self, paths: &'a [*const c_char]) -> Self {
 		self.inner.searchPaths = paths.as_ptr();
 		self.inner.searchPathCount = paths.len() as _;
 		self
@@ -728,7 +728,7 @@ impl CompilerOptions {
 		self
 	}
 
-	fn push_strings(mut self, name: CompilerOptionName, s0: *const i8, s1: *const i8) -> Self {
+	fn push_strings(mut self, name: CompilerOptionName, s0: *const c_char, s1: *const c_char) -> Self {
 		self.options.push(sys::slang_CompilerOptionEntry {
 			name,
 			value: sys::slang_CompilerOptionValue {
