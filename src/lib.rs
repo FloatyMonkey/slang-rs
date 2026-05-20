@@ -2,12 +2,13 @@
 
 pub mod reflection;
 
+pub mod fs;
 #[cfg(test)]
 mod tests;
 
 use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
-use std::ptr::{null, null_mut};
+use std::ptr::{NonNull, null, null_mut};
 
 pub(crate) use shader_slang_sys as sys;
 
@@ -25,6 +26,9 @@ pub use sys::{
 	slang_Modifier as Modifier,
 };
 
+pub use crate::fs::FileSystemTrait;
+
+#[macro_export]
 macro_rules! vcall {
 	($self:expr, $method:ident($($args:expr),*)) => {
 		unsafe { ($self.vtable().$method)($self.as_raw(), $($args),*) }
@@ -38,6 +42,20 @@ const fn uuid(uuid: u128) -> UUID {
 		data3: ((uuid >> 64) & 0xffff) as u16,
 		data4: (uuid as u64).to_be_bytes(),
 	}
+}
+
+pub(crate) const fn uuid_eq(a: &sys::SlangUUID, b: &sys::SlangUUID) -> bool {
+	a.data1 == b.data1 
+		&& a.data2 == b.data2
+		&& a.data3 == b.data3
+		&& a.data4[0] == b.data4[0]
+		&& a.data4[1] == b.data4[1]
+		&& a.data4[2] == b.data4[2]
+		&& a.data4[3] == b.data4[3]
+		&& a.data4[4] == b.data4[4]
+		&& a.data4[5] == b.data4[5] 
+		&& a.data4[6] == b.data4[6] 
+		&& a.data4[7] == b.data4[7]
 }
 
 pub enum Error {
@@ -159,6 +177,14 @@ unsafe impl Interface for Blob {
 }
 
 impl Blob {
+	/// Creates a new Blob from the given data.
+	pub fn new(data: &[u8]) -> Blob {
+		let blob = unsafe { sys::slang_createBlob(data.as_ptr().cast(), data.len()) };
+		let blob = NonNull::new(blob).expect("Slang returned a null pointer to a Blob");
+
+		Blob(IUnknown(blob.cast()))
+	}
+
 	pub fn as_slice(&self) -> &[u8] {
 		let ptr = vcall!(self, getBufferPointer());
 		let size = vcall!(self, getBufferSize());
@@ -679,6 +705,11 @@ impl<'a> SessionDesc<'a> {
 	pub fn options(mut self, options: &'a CompilerOptions) -> Self {
 		self.inner.compilerOptionEntries = options.options.as_ptr() as _;
 		self.inner.compilerOptionEntryCount = options.options.len() as _;
+		self
+	}
+
+	pub fn file_system<T: FileSystemTrait + 'static>(mut self, fs: T) -> Self {
+		self.inner.fileSystem = crate::fs::FileSystemForeignAdapter::new(Box::new(fs));
 		self
 	}
 }
