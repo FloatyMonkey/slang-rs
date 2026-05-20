@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      slang_version:
+        description: "Slang version to download (e.g., 2025.21.1)"
+        required: false
+        default: "2025.21.1"
+        type: string
+
+env:
+  SLANG_VERSION: ${{ inputs.slang_version || '2025.21.1' }}
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.os }} - ${{ matrix.rust }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rust: [stable]
+        include:
+          - os: ubuntu-latest
+            platform: linux-x86_64
+          - os: macos-latest
+            platform: macos-aarch64
+          - os: windows-latest
+            platform: windows-x86_64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Download Slang release
+        shell: bash
+        run: |
+          ./scripts/download-slang.sh "${{ env.SLANG_VERSION }}" "${{ matrix.platform }}" >> $GITHUB_ENV
+
+      - name: Add Slang to PATH (Windows)
+        if: runner.os == 'Windows'
+        run: echo "${{ env.SLANG_DIR }}\bin" >> $env:GITHUB_PATH
+
+      - name: Build
+        run: cargo build --verbose
+
+      - name: Run tests
+        run: cargo test --verbose
