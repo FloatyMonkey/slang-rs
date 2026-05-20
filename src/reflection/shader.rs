@@ -94,14 +94,14 @@ impl Shader {
 		)
 	}
 
-	pub fn specialize_type(&self, ty: &Type, specialization_args: &[&Type]) -> Option<&TypeLayout> {
+	pub fn specialize_type(&self, ty: &Type, specialization_args: &[&Type]) -> Option<&Type> {
 		rcall!(spReflection_specializeType(
 			self,
 			ty as *const _ as *mut _,
 			specialization_args.len() as i64,
 			specialization_args.as_ptr() as *mut _,
 			std::ptr::null_mut()
-		) as Option<&TypeLayout>)
+		) as Option<&Type>)
 	}
 
 	pub fn specialize_generic(

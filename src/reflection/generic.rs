@@ -1,4 +1,4 @@
-use super::{Decl, Type, TypeParameter, Variable, rcall};
+use super::{Decl, Type, Variable, rcall};
 use crate::{DeclKind, sys};
 
 #[repr(transparent)]
@@ -17,11 +17,11 @@ impl Generic {
 		rcall!(spReflectionGeneric_GetTypeParameterCount(self))
 	}
 
-	pub fn type_parameter_by_index(&self, index: u32) -> Option<&TypeParameter> {
-		rcall!(spReflectionGeneric_GetTypeParameter(self, index) as Option<&TypeParameter>)
+	pub fn type_parameter_by_index(&self, index: u32) -> Option<&Variable> {
+		rcall!(spReflectionGeneric_GetTypeParameter(self, index) as Option<&Variable>)
 	}
 
-	pub fn type_parameters(&self) -> impl ExactSizeIterator<Item = &TypeParameter> {
+	pub fn type_parameters(&self) -> impl ExactSizeIterator<Item = &Variable> {
 		(0..self.type_parameter_count()).map(|i| self.type_parameter_by_index(i).unwrap())
 	}
 

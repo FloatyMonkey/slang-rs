@@ -62,8 +62,7 @@ impl VariableLayout {
 	}
 
 	pub fn semantic_name(&self) -> Option<&str> {
-		let name = rcall!(spReflectionVariableLayout_GetSemanticName(self));
-		(!name.is_null()).then(|| unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() })
+		rcall!(spReflectionVariableLayout_GetSemanticName(self) as Option<&str>)
 	}
 
 	pub fn semantic_index(&self) -> usize {
