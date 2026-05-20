@@ -2,16 +2,19 @@
 
 pub mod reflection;
 
+mod c_string_ptr;
+
 #[cfg(test)]
 mod tests;
 
-use std::ffi::{CStr, CString};
+use std::ffi::{c_char, CStr, CString};
 use std::marker::PhantomData;
 use std::ptr::{null, null_mut};
 
 pub(crate) use shader_slang_sys as sys;
 
 pub use sys::{
+	slang_CompilerOptionName as CompilerOptionName, slang_Modifier as Modifier,
 	SlangBindingType as BindingType, SlangCompileTarget as CompileTarget,
 	SlangDebugInfoLevel as DebugInfoLevel, SlangDeclKind as DeclKind,
 	SlangFloatingPointMode as FloatingPointMode, SlangImageFormat as ImageFormat,
@@ -21,9 +24,10 @@ pub use sys::{
 	SlangReflectionGenericArg as GenericArg, SlangReflectionGenericArgType as GenericArgType,
 	SlangResourceAccess as ResourceAccess, SlangResourceShape as ResourceShape,
 	SlangScalarType as ScalarType, SlangSourceLanguage as SourceLanguage, SlangStage as Stage,
-	SlangTypeKind as TypeKind, SlangUUID as UUID, slang_CompilerOptionName as CompilerOptionName,
-	slang_Modifier as Modifier,
+	SlangTypeKind as TypeKind, SlangUUID as UUID,
 };
+
+use crate::c_string_ptr::CStringPtr;
 
 macro_rules! vcall {
 	($self:expr, $method:ident($($args:expr),*)) => {
@@ -203,7 +207,7 @@ impl GlobalSession {
 
 	pub fn create_session(&self, desc: &SessionDesc) -> Option<Session> {
 		let mut session = null_mut();
-		vcall!(self, createSession(&**desc, &mut session));
+		vcall!(self, createSession(&desc.inner, &mut session));
 		Some(Session(IUnknown(std::ptr::NonNull::new(
 			session as *mut _,
 		)?)))
@@ -637,18 +641,10 @@ impl<'a> TargetDesc<'a> {
 	}
 }
 
-#[repr(transparent)]
 pub struct SessionDesc<'a> {
 	inner: sys::slang_SessionDesc,
+	search_paths: Vec<CStringPtr>,
 	_phantom: PhantomData<&'a ()>,
-}
-
-impl std::ops::Deref for SessionDesc<'_> {
-	type Target = sys::slang_SessionDesc;
-
-	fn deref(&self) -> &Self::Target {
-		&self.inner
-	}
 }
 
 impl Default for SessionDesc<'_> {
@@ -658,6 +654,7 @@ impl Default for SessionDesc<'_> {
 				structureSize: std::mem::size_of::<sys::slang_SessionDesc>(),
 				..unsafe { std::mem::zeroed() }
 			},
+			search_paths: Vec::new(),
 			_phantom: PhantomData,
 		}
 	}
@@ -670,9 +667,29 @@ impl<'a> SessionDesc<'a> {
 		self
 	}
 
-	pub fn search_paths(mut self, paths: &'a [*const i8]) -> Self {
-		self.inner.searchPaths = paths.as_ptr();
+	/// Sets the search paths of this `SessionDesc`. Calling this method more than once
+	/// will **not** append paths.
+	///
+	/// # Panics
+	/// Panics if any of the paths contains an internal nul byte.
+	///
+	/// # Performance
+	/// This method does 1 + N heap allocations, where N is the number of paths.
+	pub fn search_paths<SearchPath>(mut self, paths: impl IntoIterator<Item = SearchPath>) -> Self
+	where
+		SearchPath: AsRef<str>,
+	{
+		let paths = paths
+			.into_iter()
+			.map(|path| CString::new(path.as_ref()).map(CStringPtr::from))
+			.collect::<std::result::Result<Vec<_>, _>>()
+			.expect("One or more search paths contains an internal nul byte");
+
+		self.inner.searchPaths = paths.as_ptr().cast::<*const c_char>();
 		self.inner.searchPathCount = paths.len() as _;
+
+		self.search_paths = paths;
+
 		self
 	}
 

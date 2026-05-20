@@ -4,8 +4,6 @@ use crate as slang;
 fn compile() {
 	let global_session = slang::GlobalSession::new().unwrap();
 
-	let search_path = std::ffi::CString::new("shaders").unwrap();
-
 	// All compiler options are available through this builder.
 	let session_options = slang::CompilerOptions::default()
 		.optimization(slang::OptimizationLevel::High)
@@ -16,11 +14,10 @@ fn compile() {
 		.profile(global_session.find_profile("glsl_450"));
 
 	let targets = [target_desc];
-	let search_paths = [search_path.as_ptr()];
 
 	let session_desc = slang::SessionDesc::default()
 		.targets(&targets)
-		.search_paths(&search_paths)
+		.search_paths(["shaders"])
 		.options(&session_options);
 
 	let session = global_session.create_session(&session_desc).unwrap();
